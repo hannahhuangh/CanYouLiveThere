@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>The Rent Gap — ZIP Code Rent Affordability</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #050711;
+      --card: #0e1426;
+      --border: rgba(255, 188, 92, 0.25);
+      --text: #f4efe7;
+      --muted: #8a91a3;
+      --accent: #ffb84d;
+      --green: #7dd87d;
+      --yellow: #facc15;
+      --orange: #fb923c;
+      --red: #ef4444;
+      --blue: #65c7ff;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+    }
+
+    header {
+      padding: 2rem 2.5rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1.5rem;
+      background: linear-gradient(180deg, #090d1a, #050711);
+    }
+
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 2.55rem;
+      line-height: 1;
+      color: #fff9ed;
+    }
+
+    header p,
+    header .tag {
+      font-size: 0.62rem;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      line-height: 1.9;
+    }
+
+    header p {
+      margin-top: 0.45rem;
+    }
+
+    header .tag {
+      text-align: right;
+    }
+
+    .intro {
+      max-width: 1050px;
+      margin: 2rem auto 0;
+      padding: 0 2.5rem;
+      color: var(--muted);
+      font-size: 0.72rem;
+      line-height: 2;
+      letter-spacing: 0.5px;
+    }
+
+    .method-box,
+    .control-box {
+      max-width: 1050px;
+      margin: 1rem auto 0;
+      padding: 1.1rem 1.25rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.68rem;
+      line-height: 1.9;
+      letter-spacing: 0.5px;
+    }
+
+    .method-box h2 {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-weight: 400;
+      color: #fff9ed;
+      font-size: 1.1rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .control-box {
+      color: var(--text);
+      font-size: 0.7rem;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.7rem;
+    }
+
+    .control-box label {
+      color: #fff9ed;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .control-box input {
+      width: 52%;
+      max-width: 520px;
+      vertical-align: middle;
+    }
+
+    .control-box select {
+      background: #050711;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.45rem 0.6rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem;
+    }
+
+    #salaryValue {
+      color: var(--accent);
+      font-weight: 700;
+      min-width: 95px;
+    }
+
+    .control-box p {
+      color: var(--muted);
+      margin-top: 0.6rem;
+    }
+
+    .loading {
+      max-width: 900px;
+      margin: 2rem auto 0;
+      padding: 1rem;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      background: var(--card);
+      font-size: 0.65rem;
+      letter-spacing: 1.5px;
+      text-align: center;
+    }
+
+    .loading.hidden {
+      display: none;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      padding: 2rem 2.5rem;
+      max-width: 1450px;
+      margin: 0 auto;
+    }
+
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      min-height: 370px;
+    }
+
+    .chart-card.wide {
+      grid-column: 1 / -1;
+    }
+
+    .chart-card h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.12rem;
+      font-weight: 400;
+      font-style: italic;
+      color: #fff9ed;
+      margin-bottom: 0.3rem;
+    }
+
+    .chart-desc {
+      font-size: 0.6rem;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+    }
+
+    .insight {
+      margin-top: 0.8rem;
+      font-size: 0.62rem;
+      letter-spacing: 0.8px;
+      color: #b0b6c4;
+      border-left: 2px solid var(--accent);
+      padding-left: 0.6rem;
+      line-height: 1.8;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      margin-top: 0.35rem;
+      color: #b0b6c4;
+      font-size: 0.58rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      flex-wrap: wrap;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+
+    svg text {
+      font-family: 'Space Mono', monospace;
+    }
+
+    .axis path,
+    .axis line {
+      stroke: rgba(255,255,255,0.18);
+    }
+
+    .axis text {
+      fill: var(--muted);
+      font-size: 9px;
+    }
+
+    .axis-label {
+      fill: #b0b6c4;
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+
+    .grid-line {
+      stroke: rgba(255,255,255,0.08);
+      stroke-dasharray: 3,3;
+    }
+
+    .state {
+      stroke: rgba(255,255,255,0.35);
+      stroke-width: 0.55;
+      cursor: pointer;
+    }
+
+    .state:hover {
+      stroke: #fff9ed;
+      stroke-width: 1.5;
+    }
+
+    .tooltip {
+      position: fixed;
+      pointer-events: none;
+      background: #0b1020;
+      border: 1px solid var(--border);
+      color: #fff9ed;
+      padding: 0.7rem 0.8rem;
+      font-size: 0.62rem;
+      line-height: 1.65;
+      opacity: 0;
+      max-width: 330px;
+      z-index: 10;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      line-height: 1.8;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    @media(max-width: 900px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      header .tag {
+        text-align: left;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+        padding: 1.5rem;
+      }
+
+      .chart-card.wide {
+        grid-column: auto;
+      }
+
+      .control-box input {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div>
+    <h1>The Rent Gap</h1>
+    <p>Where your income can — and cannot — keep up with rent</p>
+  </div>
+
+  <div class="tag">
+    <span>RENT DATA: ZILLOW ZORI ZIP CODE</span><br>
+    <span>INCOME DATA: IRS 2022 AGI BY ZIP</span><br>
+    <span>FOCUS: RENT BURDEN + REQUIRED INCOME</span>
+  </div>
+</header>
+
+<p class="intro">
+  This project compares ZIP-code rent with local income and a user-selected annual income. Instead of only asking where rent is expensive, it asks where rent becomes unaffordable relative to income.
+</p>
+
+<div class="method-box">
+  <h2>How affordability is calculated</h2>
+  <p>
+    Monthly rent is compared to monthly income using the 30% affordability rule. If rent takes 30% or less of income, it is considered affordable. This project also calculates the annual income required to afford each ZIP code’s rent: monthly rent × 12 ÷ 0.30.
+  </p>
+</div>
+
+<div class="control-box">
+  <div class="control-row">
+    <label for="salarySlider">Annual Income:</label>
+    <input id="salarySlider" type="range" min="30000" max="250000" step="5000" value="75000">
+    <span id="salaryValue">$75,000</span>
+  </div>
+
+  <div class="control-row">
+    <label for="stateSelect">Explore State:</label>
+    <select id="stateSelect"></select>
+  </div>
+
+  <p>
+    Move the income slider to see where rent is affordable, where it is out of reach, and how much income would be needed to rent comfortably in the most expensive ZIP codes.
+  </p>
+</div>
+
+<div class="loading" id="loading">LOADING RENT AND INCOME DATA...</div>
+<div class="tooltip" id="tooltip"></div>
+
+<div class="grid" id="charts" style="display:none;">
+
+  <div class="chart-card wide">
+    <h2>1. Where Can This Income Afford Rent?</h2>
+    <div class="chart-desc">State map colored by rent burden using the selected annual income</div>
+    <svg id="chart1" width="100%" height="480"></svg>
+    <div class="legend-row">
+      <span class="legend-dot" style="background:#7dd87d;"></span><span>Affordable</span>
+      <span class="legend-dot" style="background:#facc15;"></span><span>Borderline</span>
+      <span class="legend-dot" style="background:#fb923c;"></span><span>Burdened</span>
+      <span class="legend-dot" style="background:#ef4444;"></span><span>Severely burdened</span>
+    </div>
+    <p class="insight" id="insight1">▲ FINDING: The map shows how far the selected income stretches across states.</p>
+  </div>
+
+  <div class="chart-card">
+    <h2>2. Worst ZIP Codes in Selected State</h2>
+    <div class="chart-desc">Least affordable ZIP codes within the selected state</div>
+    <svg id="chart2" width="100%" height="250"></svg>
+    <div class="legend-row"><span>Higher bar = rent takes more of selected income</span></div>
+    <p class="insight" id="insight2">▲ FINDING: This chart reveals local hotspots hidden inside state averages.</p>
+  </div>
+
+  <div class="chart-card">
+    <h2>3. How Much Income Do You Need?</h2>
+    <div class="chart-desc">ZIP codes requiring the highest income to keep rent at or below 30%</div>
+    <svg id="chart3" width="100%" height="250"></svg>
+    <div class="legend-row"><span>Required income = monthly rent × 12 ÷ 0.30</span></div>
+    <p class="insight">▲ FINDING: Some ZIP codes require well over six figures just to keep rent under 30% of income.</p>
+  </div>
+
+  <div class="chart-card">
+    <h2>4. Least Affordable ZIP Codes for This Income</h2>
+    <div class="chart-desc">National ZIP codes with the highest rent burden for the selected income</div>
+    <svg id="chart4" width="100%" height="250"></svg>
+    <div class="legend-row"><span>Higher bar = less affordable</span></div>
+    <p class="insight">▲ FINDING: These ZIP codes are where the selected income is stretched the most.</p>
+  </div>
+
+  <div class="chart-card">
+    <h2>5. Monthly Rent Over Budget</h2>
+    <div class="chart-desc">Where rent exceeds the selected income’s affordable monthly budget the most</div>
+    <svg id="chart5" width="100%" height="250"></svg>
+    <div class="legend-row"><span>Over budget = rent − 30% monthly income budget</span></div>
+    <p class="insight" id="insight5">▲ FINDING: This chart turns rent burden into dollars over budget per month.</p>
+  </div>
+
+  <div class="chart-card wide">
+    <h2>6. How Many ZIP Codes Become Affordable?</h2>
+    <div class="chart-desc">Number of ZIP codes affordable across different annual income levels</div>
+    <svg id="chart6" width="100%" height="360"></svg>
+    <div class="legend-row">
+      <span class="legend-dot" style="background:#7dd87d;"></span><span>Affordable ≤ 30%</span>
+      <span class="legend-dot" style="background:#facc15;"></span><span>Borderline ≤ 40%</span>
+    </div>
+    <p class="insight" id="insight6">▲ FINDING: More income unlocks more ZIP codes, but the increase is uneven.</p>
+  </div>
+
+</div>
+
+<footer>
+  ZILLOW ZORI RENT DATA + IRS 2022 ZIP-CODE AGI DATA · VALUES ARE ESTIMATES FOR EXPLORATORY VISUALIZATION · RENT AFFORDABILITY USES THE 30% RULE
+</footer>
+
+<script>
+const ZIP_FILE = "./datasets/rent_income_zip_clean.csv";
+const STATE_FILE = "./datasets/rent_income_state_clean.csv";
+
+const tooltip = d3.select("#tooltip");
+
+let ZIP_DATA = [];
+let STATE_DATA = [];
+let US_STATES = null;
+
+const stateToFips = {
+  "AL":"01","AK":"02","AZ":"04","AR":"05","CA":"06","CO":"08","CT":"09","DE":"10","DC":"11",
+  "FL":"12","GA":"13","HI":"15","ID":"16","IL":"17","IN":"18","IA":"19","KS":"20","KY":"21",
+  "LA":"22","ME":"23","MD":"24","MA":"25","MI":"26","MN":"27","MS":"28","MO":"29","MT":"30",
+  "NE":"31","NV":"32","NH":"33","NJ":"34","NM":"35","NY":"36","NC":"37","ND":"38","OH":"39",
+  "OK":"40","OR":"41","PA":"42","RI":"44","SC":"45","SD":"46","TN":"47","TX":"48","UT":"49",
+  "VT":"50","VA":"51","WA":"53","WV":"54","WI":"55","WY":"56"
+};
+
+function formatDollar(x) {
+  return "$" + d3.format(",.0f")(x);
+}
+
+function formatPercent(x) {
+  return d3.format(".1f")(x) + "%";
+}
+
+function categoryFromBurden(burden) {
+  if (burden <= 0.30) return "Affordable";
+  if (burden <= 0.40) return "Borderline";
+  if (burden <= 0.50) return "Burdened";
+  return "Severely burdened";
+}
+
+function categoryColor(category) {
+  if (category === "Affordable") return "#7dd87d";
+  if (category === "Borderline") return "#facc15";
+  if (category === "Burdened") return "#fb923c";
+  return "#ef4444";
+}
+
+function burdenColor(burden) {
+  return categoryColor(categoryFromBurden(burden));
+}
+
+function chartFrame(id, customHeight = 250) {
+  const W = document.getElementById(id).parentElement.clientWidth - 48;
+  const H = customHeight;
+  const m = { top: 18, right: 30, bottom: 60, left: 82 };
+  const iW = W - m.left - m.right;
+  const iH = H - m.top - m.bottom;
+
+  const svg = d3.select("#" + id)
+    .attr("height", H)
+    .html("");
+
+  const g = svg.append("g")
+    .attr("transform", `translate(${m.left},${m.top})`);
+
+  return { svg, g, W, H, m, iW, iH };
+}
+
+function addLabels(g, iW, iH, xLabel, yLabel) {
+  if (xLabel) {
+    g.append("text")
+      .attr("class", "axis-label")
+      .attr("x", iW / 2)
+      .attr("y", iH + 46)
+      .attr("text-anchor", "middle")
+      .text(xLabel);
+  }
+
+  if (yLabel) {
+    g.append("text")
+      .attr("class", "axis-label")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -iH / 2)
+      .attr("y", -60)
+      .attr("text-anchor", "middle")
+      .text(yLabel);
+  }
+}
+
+function gridY(g, y, ticks, iW) {
+  ticks.forEach(t => {
+    g.append("line")
+      .attr("class", "grid-line")
+      .attr("x1", 0)
+      .attr("x2", iW)
+      .attr("y1", y(t))
+      .attr("y2", y(t));
+  });
+}
+
+function cleanData(zipData, stateData) {
+  zipData.forEach(d => {
+    d.zip = String(d.zip).padStart(5, "0");
+    d.city = d.city || "Unknown";
+    d.state = d.state || "Unknown";
+    d.monthly_rent = +d.monthly_rent;
+    d.avg_annual_income = +d.avg_annual_income;
+    d.avg_monthly_income = +d.avg_monthly_income;
+    d.local_rent_burden = +d.rent_burden;
+    d.local_rent_burden_percent = +d.rent_burden_percent;
+    d.required_income = d.monthly_rent * 12 / 0.30;
+  });
+
+  zipData = zipData.filter(d =>
+    isFinite(d.monthly_rent) &&
+    isFinite(d.avg_annual_income) &&
+    isFinite(d.required_income) &&
+    d.monthly_rent > 0 &&
+    d.avg_annual_income > 0
+  );
+
+  stateData.forEach(d => {
+    d.avg_monthly_rent = +d.avg_monthly_rent;
+    d.avg_annual_income = +d.avg_annual_income;
+    d.avg_monthly_income = +d.avg_monthly_income;
+    d.local_rent_burden = +d.avg_rent_burden;
+    d.local_rent_burden_percent = +d.rent_burden_percent;
+    d.zip_count = +d.zip_count;
+    d.fips = stateToFips[d.state];
+  });
+
+  stateData = stateData.filter(d =>
+    d.fips &&
+    isFinite(d.avg_monthly_rent) &&
+    isFinite(d.avg_annual_income) &&
+    d.avg_monthly_rent > 0 &&
+    d.avg_annual_income > 0
+  );
+
+  return { zipData, stateData };
+}
+
+function getSalaryZipData(salary) {
+  const monthlyIncome = salary / 12;
+  const monthlyBudget = salary * 0.30 / 12;
+
+  return ZIP_DATA.map(d => {
+    const burden = d.monthly_rent / monthlyIncome;
+    const overBudget = d.monthly_rent - monthlyBudget;
+
+    return {
+      ...d,
+      salary_rent_burden: burden,
+      salary_rent_burden_percent: burden * 100,
+      salary_category: categoryFromBurden(burden),
+      monthly_budget: monthlyBudget,
+      over_budget: overBudget
+    };
+  });
+}
+
+function getSalaryStateData(salary) {
+  const monthlyIncome = salary / 12;
+
+  return STATE_DATA.map(d => {
+    const burden = d.avg_monthly_rent / monthlyIncome;
+
+    return {
+      ...d,
+      salary_rent_burden: burden,
+      salary_rent_burden_percent: burden * 100,
+      salary_category: categoryFromBurden(burden)
+    };
+  });
+}
+
+function drawSalaryMap(stateData, salary) {
+  const { svg, W, H } = chartFrame("chart1", 480);
+
+  const dataByFips = new Map(stateData.map(d => [d.fips, d]));
+
+  const projection = d3.geoAlbersUsa()
+    .fitSize([W - 30, H - 55], { type: "FeatureCollection", features: US_STATES });
+
+  const path = d3.geoPath(projection);
+
+  svg.append("g")
+    .attr("transform", "translate(15, 10)")
+    .selectAll("path")
+    .data(US_STATES)
+    .enter()
+    .append("path")
+    .attr("class", "state")
+    .attr("d", path)
+    .attr("fill", d => {
+      const fips = String(d.id).padStart(2, "0");
+      const row = dataByFips.get(fips);
+      return row ? burdenColor(row.salary_rent_burden) : "#1f2937";
+    })
+    .attr("opacity", d => {
+      const fips = String(d.id).padStart(2, "0");
+      return dataByFips.has(fips) ? 0.95 : 0.35;
+    })
+    .on("mousemove", (event, d) => {
+      const fips = String(d.id).padStart(2, "0");
+      const row = dataByFips.get(fips);
+      if (!row) return;
+
+      tooltip
+        .style("opacity", 1)
+        .style("left", event.clientX + 14 + "px")
+        .style("top", event.clientY + 14 + "px")
+        .html(`
+          <strong>${row.state}</strong><br>
+          Selected income: ${formatDollar(salary)}<br>
+          Avg monthly rent: ${formatDollar(row.avg_monthly_rent)}<br>
+          Rent burden: ${formatPercent(row.salary_rent_burden_percent)}<br>
+          Category: ${row.salary_category}<br>
+          ZIPs included: ${row.zip_count}
+        `);
+    })
+    .on("mouseleave", () => tooltip.style("opacity", 0));
+
+  const affordableStates = stateData.filter(d => d.salary_rent_burden <= 0.30).length;
+
+  svg.append("text")
+    .attr("x", W / 2)
+    .attr("y", H - 18)
+    .attr("class", "axis-label")
+    .attr("text-anchor", "middle")
+    .text(`${affordableStates} states are affordable at ${formatDollar(salary)} using the 30% rule`);
+
+  document.getElementById("insight1").textContent =
+    `▲ FINDING: At ${formatDollar(salary)}, ${affordableStates} states are affordable on average.`;
+}
+
+function drawWorstZipByState(zipData, selectedState, salary) {
+  const rows = zipData
+    .filter(d => d.state === selectedState)
+    .sort((a, b) => b.salary_rent_burden - a.salary_rent_burden)
+    .slice(0, 12);
+
+  const { g, iW, iH } = chartFrame("chart2", 250);
+
+  if (!rows.length) {
+    g.append("text")
+      .attr("x", iW / 2)
+      .attr("y", iH / 2)
+      .attr("text-anchor", "middle")
+      .attr("fill", "#8a91a3")
+      .text("No ZIP data available for selected state.");
+    return;
+  }
+
+  const x = d3.scaleLinear()
+    .domain([0, d3.max(rows, d => d.salary_rent_burden_percent)])
+    .nice()
+    .range([0, iW]);
+
+  const y = d3.scaleBand()
+    .domain(rows.map(d => d.zip))
+    .range([0, iH])
+    .padding(0.22);
+
+  g.append("g")
+    .attr("class", "axis")
+    .call(d3.axisLeft(y).tickSize(0));
+
+  g.append("g")
+    .attr("class", "axis")
+    .attr("transform", `translate(0,${iH})`)
+    .call(d3.axisBottom(x).ticks(4).tickFormat(d => d + "%"));
+
+  g.selectAll("rect")
+    .data(rows)
+    .enter()
+    .append("rect")
+    .attr("x", 0)
+    .attr("y", d => y(d.zip))
+    .attr("width", d => x(d.salary_rent_burden_percent))
+    .attr("height", y.bandwidth())
+    .attr("fill", d => burdenColor(d.salary_rent_burden))
+    .attr("rx", 2)
+    .on("mousemove", (event, d) => showZipTooltip(event, d, salary))
+    .on("mouseleave", () => tooltip.style("opacity", 0));
+
+  g.selectAll(".label")
+    .data(rows)
+    .enter()
+    .append("text")
+    .attr("x", d => x(d.salary_rent_burden_percent) + 5)
+    .attr("y", d => y(d.zip) + y.bandwidth() / 2 + 3)
+    .attr("fill", "#b0b6c4")
+    .attr("font-size", "9px")
+    .text(d => formatPercent(d.salary_rent_burden_percent));
+
+  addLabels(g, iW, iH, `Rent burden in ${selectedState}`, "");
+
+  document.getElementById("insight2").textContent =
+    `▲ FINDING: In ${selectedState}, ZIP ${rows[0].zip} is the least affordable for a ${formatDollar(salary)} income.`;
+}
+
+function drawRequiredIncome(zipData) {
+  const rows = [...zipData]
+    .sort((a, b) => b.required_income - a.required_income)
+    .slice(0, 12);
+
+  const { g, iW, iH } = chartFrame("chart3", 250);
+
+  const x = d3.scaleLinear()
+    .domain([0, d3.max(rows, d => d.required_income)])
+    .nice()
+    .range([0, iW]);
+
+  const y = d3.scaleBand()
+    .domain(rows.map(d => `${d.zip} ${d.state}`))
+    .range([0, iH])
+    .padding(0.22);
+
+  g.append("g")
+    .attr("class", "axis")
+    .call(d3.axisLeft(y).tickSize(0));
+
+  g.append("g")
+    .attr("class", "axis")
+    .attr("transform", `translate(0,${iH})`)
+    .call(d3.axisBottom(x).ticks(4).tickFormat(d => "$" + d3.format(".2s")(d)));
+
+  g.selectAll("rect")
+    .data(rows)
+    .enter()
+    .append("rect")
+    .attr("x", 0)
+    .attr("y", d => y(`${d.zip} ${d.state}`))
+    .attr("width", d => x(d.required_income))
+    .attr("height", y.bandwidth())
+    .attr("fill", "#ffb84d")
+    .attr("rx", 2)
+    .on("mousemove", (event, d) => {
+      tooltip
+        .style("opacity", 1)
+        .style("left", event.clientX + 14 + "px")
+        .style("top", event.clientY + 14 + "px")
+        .html(`
+          <strong>${d.zip} — ${d.city}, ${d.state}</strong><br>
+          Monthly rent: ${formatDollar(d.monthly_rent)}<br>
+          Income needed for 30% rule: ${formatDollar(d.required_income)}<br>
+          Local avg income: ${formatDollar(d.avg_annual_income)}
+        `);
+    })
+    .on("mouseleave", () => tooltip.style("opacity", 0));
+
+  g.selectAll(".label")
+    .data(rows)
+    .enter()
+    .append("text")
+    .attr("x", d => x(d.required_income) + 5)
+    .attr("y", d => y(`${d.zip} ${d.state}`) + y.bandwidth() / 2 + 3)
+    .attr("fill", "#b0b6c4")
+    .attr("font-size", "9px")
+    .text(d => formatDollar(d.required_income));
+
+  addLabels(g, iW, iH, "Annual income needed", "");
+}
+
+function drawLeastAffordable(zipData, salary) {
+  const rows = [...zipData]
+    .sort((a, b) => b.salary_rent_burden - a.salary_rent_burden)
+    .slice(0, 12);
+
+  const { g, iW, iH } = chartFrame("chart4", 250);
+
+  const x = d3.scaleLinear()
+    .domain([0, d3.max(rows, d => d.salary_rent_burden_percent)])
+    .nice()
+    .range([0, iW]);
+
+  const y = d3.scaleBand()
+    .domain(rows.map(d => `${d.zip} ${d.state}`))
+    .range([0, iH])
+    .padding(0.22);
+
+  g.append("g")
+    .attr("class", "axis")
+    .call(d3.axisLeft(y).tickSize(0));
+
+  g.append("g")
+    .attr("class", "axis")
+    .attr("transform", `translate(0,${iH})`)
+    .call(d3.axisBottom(x).ticks(4).tickFormat(d => d + "%"));
+
+  g.selectAll("rect")
+    .data(rows)
+    .enter()
+    .append("rect")
+    .attr("x", 0)
+    .attr("y", d => y(`${d.zip} ${d.state}`))
+    .attr("width", d => x(d.salary_rent_burden_percent))
+    .attr("height", y.bandwidth())
+    .attr("fill", d => burdenColor(d.salary_rent_burden))
+    .attr("rx", 2)
+    .on("mousemove", (event, d) => showZipTooltip(event, d, salary))
+    .on("mouseleave", () => tooltip.style("opacity", 0));
+
+  g.selectAll(".label")
+    .data(rows)
+    .enter()
+    .append("text")
+    .attr("x", d => x(d.salary_rent_burden_percent) + 5)
+    .attr("y", d => y(`${d.zip} ${d.state}`) + y.bandwidth() / 2 + 3)
+    .attr("fill", "#b0b6c4")
+    .attr("font-size", "9px")
+    .text(d => formatPercent(d.salary_rent_burden_percent));
+
+  addLabels(g, iW, iH, "Rent burden with selected income", "");
+}
+
+function drawOverBudget(zipData, salary) {
+  const rows = [...zipData]
+    .filter(d => d.over_budget > 0)
+    .sort((a, b) => b.over_budget - a.over_budget)
+    .slice(0, 12);
+
+  const { g, iW, iH } = chartFrame("chart5", 250);
+
+  if (!rows.length) {
+    g.append("text")
+      .attr("x", iW / 2)
+      .attr("y", iH / 2)
+      .attr("text-anchor", "middle")
+      .attr("fill", "#8a91a3")
+      .text("No ZIP codes are over budget at this income.");
+    return;
+  }
+
+  const x = d3.scaleLinear()
+    .domain([0, d3.max(rows, d => d.over_budget)])
+    .nice()
+    .range([0, iW]);
+
+  const y = d3.scaleBand()
+    .domain(rows.map(d => `${d.zip} ${d.state}`))
+    .range([0, iH])
+    .padding(0.22);
+
+  g.append("g")
+    .attr("class", "axis")
+    .call(d3.axisLeft(y).tickSize(0));
+
+  g.append("g")
+    .attr("class", "axis")
+    .attr("transform", `translate(0,${iH})`)
+    .call(d3.axisBottom(x).ticks(4).tickFormat(d => "$" + d3.format(",")(d)));
+
+  g.selectAll("rect")
+    .data(rows)
+    .enter()
+    .append("rect")
+    .attr("x", 0)
+    .attr("y", d => y(`${d.zip} ${d.state}`))
+    .attr("width", d => x(d.over_budget))
+    .attr("height", y.bandwidth())
+    .attr("fill", "#ef4444")
+    .attr("rx", 2)
+    .on("mousemove", (event, d) => showZipTooltip(event, d, salary))
+    .on("mouseleave", () => tooltip.style("opacity", 0));
+
+  g.selectAll(".label")
+    .data(rows)
+    .enter()
+    .append("text")
+    .attr("x", d => x(d.over_budget) + 5)
+    .attr("y", d => y(`${d.zip} ${d.state}`) + y.bandwidth() / 2 + 3)
+    .attr("fill", "#b0b6c4")
+    .attr("font-size", "9px")
+    .text(d => formatDollar(d.over_budget));
+
+  addLabels(g, iW, iH, "Monthly dollars over budget", "");
+
+  document.getElementById("insight5").textContent =
+    `▲ FINDING: At ${formatDollar(salary)}, the worst ZIP code is ${formatDollar(rows[0].over_budget)} over budget per month.`;
+}
+
+function drawAffordableBySalary(zipBase, currentSalary) {
+  const salaries = d3.range(30000, 250001, 5000).map(salary => {
+    const monthlyIncome = salary / 12;
+    const affordable = zipBase.filter(d => d.monthly_rent / monthlyIncome <= 0.30).length;
+    const borderline = zipBase.filter(d => d.monthly_rent / monthlyIncome <= 0.40).length;
+
+    return { salary, affordable, borderline };
+  });
+
+  const { g, iW, iH } = chartFrame("chart6", 360);
+
+  const x = d3.scaleLinear()
+    .domain(d3.extent(salaries, d => d.salary))
+    .range([0, iW]);
+
+  const y = d3.scaleLinear()
+    .domain([0, d3.max(salaries, d => d.borderline)])
+    .nice()
+    .range([iH, 0]);
+
+  gridY(g, y, y.ticks(5), iW);
+
+  g.append("g")
+    .attr("class", "axis")
+    .attr("transform", `translate(0,${iH})`)
+    .call(d3.axisBottom(x).ticks(6).tickFormat(d => "$" + d3.format(".2s")(d)));
+
+  g.append("g")
+    .attr("class", "axis")
+    .call(d3.axisLeft(y).ticks(5));
+
+  addLabels(g, iW, iH, "Annual income", "Number of ZIP codes");
+
+  const lineAffordable = d3.line()
+    .x(d => x(d.salary))
+    .y(d => y(d.affordable))
+    .curve(d3.curveMonotoneX);
+
+  const lineBorderline = d3.line()
+    .x(d => x(d.salary))
+    .y(d => y(d.borderline))
+    .curve(d3.curveMonotoneX);
+
+  g.append("path")
+    .datum(salaries)
+    .attr("d", lineBorderline)
+    .attr("fill", "none")
+    .attr("stroke", "#facc15")
+    .attr("stroke-width", 2)
+    .attr("stroke-dasharray", "5,3");
+
+  g.append("path")
+    .datum(salaries)
+    .attr("d", lineAffordable)
+    .attr("fill", "none")
+    .attr("stroke", "#7dd87d")
+    .attr("stroke-width", 2);
+
+  const current = salaries.find(d => d.salary === currentSalary) || salaries[0];
+
+  g.append("line")
+    .attr("x1", x(currentSalary))
+    .attr("x2", x(currentSalary))
+    .attr("y1", 0)
+    .attr("y2", iH)
+    .attr("stroke", "#fff9ed")
+    .attr("stroke-width", 1)
+    .attr("stroke-dasharray", "4,3");
+
+  g.append("circle")
+    .attr("cx", x(currentSalary))
+    .attr("cy", y(current.affordable))
+    .attr("r", 4)
+    .attr("fill", "#7dd87d");
+
+  g.append("circle")
+    .attr("cx", x(currentSalary))
+    .attr("cy", y(current.borderline))
+    .attr("r", 4)
+    .attr("fill", "#facc15");
+
+  g.append("text")
+    .attr("x", iW - 155)
+    .attr("y", 16)
+    .attr("fill", "#7dd87d")
+    .attr("font-size", "9px")
+    .text("Affordable ≤30%");
+
+  g.append("text")
+    .attr("x", iW - 155)
+    .attr("y", 32)
+    .attr("fill", "#facc15")
+    .attr("font-size", "9px")
+    .text("Borderline ≤40%");
+
+  document.getElementById("insight6").textContent =
+    `▲ FINDING: At ${formatDollar(currentSalary)}, ${current.affordable.toLocaleString()} ZIP codes are affordable using the 30% rule.`;
+}
+
+function showZipTooltip(event, d, salary) {
+  tooltip
+    .style("opacity", 1)
+    .style("left", event.clientX + 14 + "px")
+    .style("top", event.clientY + 14 + "px")
+    .html(`
+      <strong>${d.zip} — ${d.city}, ${d.state}</strong><br>
+      Selected income: ${formatDollar(salary)}<br>
+      Monthly rent: ${formatDollar(d.monthly_rent)}<br>
+      Monthly budget: ${formatDollar(d.monthly_budget)}<br>
+      Rent burden: ${formatPercent(d.salary_rent_burden_percent)}<br>
+      Required income: ${formatDollar(d.required_income)}<br>
+      Local avg income: ${formatDollar(d.avg_annual_income)}
+    `);
+}
+
+function populateStateDropdown() {
+  const states = Array.from(new Set(ZIP_DATA.map(d => d.state)))
+    .filter(d => d && d !== "Unknown")
+    .sort();
+
+  const select = d3.select("#stateSelect");
+
+  select.selectAll("option")
+    .data(states)
+    .enter()
+    .append("option")
+    .attr("value", d => d)
+    .text(d => d);
+
+  select.property("value", states.includes("CA") ? "CA" : states[0]);
+}
+
+function updateCharts(salary) {
+  const selectedState = document.getElementById("stateSelect").value;
+  const salaryZipData = getSalaryZipData(salary);
+  const salaryStateData = getSalaryStateData(salary);
+
+  d3.select("#salaryValue").text(formatDollar(salary));
+
+  drawSalaryMap(salaryStateData, salary);
+  drawWorstZipByState(salaryZipData, selectedState, salary);
+  drawRequiredIncome(salaryZipData);
+  drawLeastAffordable(salaryZipData, salary);
+  drawOverBudget(salaryZipData, salary);
+  drawAffordableBySalary(ZIP_DATA, salary);
+}
+
+Promise.all([
+  d3.csv(ZIP_FILE),
+  d3.csv(STATE_FILE),
+  d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json")
+]).then(([zipRaw, stateRaw, us]) => {
+  const cleaned = cleanData(zipRaw, stateRaw);
+
+  ZIP_DATA = cleaned.zipData;
+  STATE_DATA = cleaned.stateData;
+  US_STATES = topojson.feature(us, us.objects.states).features;
+
+  populateStateDropdown();
+
+  document.getElementById("loading").classList.add("hidden");
+  document.getElementById("charts").style.display = "grid";
+
+  const slider = document.getElementById("salarySlider");
+  const stateSelect = document.getElementById("stateSelect");
+
+  updateCharts(+slider.value);
+
+  slider.addEventListener("input", function() {
+    updateCharts(+this.value);
+  });
+
+  stateSelect.addEventListener("change", function() {
+    updateCharts(+slider.value);
+  });
+
+}).catch(err => {
+  console.error(err);
+  document.getElementById("loading").textContent =
+    "DATA LOAD FAILED. Make sure your folder is set up as: CanILiveThere/index.html and CanILiveThere/datasets/rent_income_zip_clean.csv + rent_income_state_clean.csv. Also run this with Live Server.";
+});
+</script>
+</body>
+</html>
