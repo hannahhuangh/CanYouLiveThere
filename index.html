@@ -270,6 +270,49 @@
       stroke-width: 1.5;
     }
 
+    .county {
+      stroke: rgba(255,255,255,0.18);
+      stroke-width: 0.25;
+      cursor: pointer;
+    }
+
+    .county:hover {
+      stroke: #fff9ed;
+      stroke-width: 0.9;
+    }
+
+    .map-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+      font-size: 0.62rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .map-actions button {
+      background: #050711;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.45rem 0.65rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 1px;
+      cursor: pointer;
+    }
+
+    .map-actions button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .map-only {
+      grid-template-columns: 1fr;
+    }
+
     .tooltip {
       position: fixed;
       pointer-events: none;
@@ -359,69 +402,31 @@
   </div>
 
   <p>
-    Move the income slider to see where rent is affordable, where it is out of reach, and how much income would be needed to rent comfortably in the most expensive ZIP codes.
+    Move the income slider to see where rent is affordable. Use the state dropdown or click a state on the map to zoom into county-level affordability.
   </p>
 </div>
 
 <div class="loading" id="loading">LOADING RENT AND INCOME DATA...</div>
 <div class="tooltip" id="tooltip"></div>
 
-<div class="grid" id="charts" style="display:none;">
+<div class="grid map-only" id="charts" style="display:none;">
 
   <div class="chart-card wide">
-    <h2>1. Where Can This Income Afford Rent?</h2>
-    <div class="chart-desc">State map colored by rent burden using the selected annual income</div>
-    <svg id="chart1" width="100%" height="480"></svg>
+    <h2>Where Can This Income Afford Rent?</h2>
+    <div class="chart-desc">Start with state affordability. Select or click a state to zoom into county-level affordability.</div>
+    <div class="map-actions">
+      <button id="resetMapButton" type="button">Reset to U.S. view</button>
+      <span id="mapModeLabel">Viewing: all states</span>
+    </div>
+    <svg id="chart1" width="100%" height="560"></svg>
     <div class="legend-row">
       <span class="legend-dot" style="background:#7dd87d;"></span><span>Affordable</span>
       <span class="legend-dot" style="background:#facc15;"></span><span>Borderline</span>
       <span class="legend-dot" style="background:#fb923c;"></span><span>Burdened</span>
       <span class="legend-dot" style="background:#ef4444;"></span><span>Severely burdened</span>
+      <span class="legend-dot" style="background:#1f2937;"></span><span>No data</span>
     </div>
-    <p class="insight" id="insight1">▲ FINDING: The map shows how far the selected income stretches across states.</p>
-  </div>
-
-  <div class="chart-card">
-    <h2>2. Worst ZIP Codes in Selected State</h2>
-    <div class="chart-desc">Least affordable ZIP codes within the selected state</div>
-    <svg id="chart2" width="100%" height="250"></svg>
-    <div class="legend-row"><span>Higher bar = rent takes more of selected income</span></div>
-    <p class="insight" id="insight2">▲ FINDING: This chart reveals local hotspots hidden inside state averages.</p>
-  </div>
-
-  <div class="chart-card">
-    <h2>3. How Much Income Do You Need?</h2>
-    <div class="chart-desc">ZIP codes requiring the highest income to keep rent at or below 30%</div>
-    <svg id="chart3" width="100%" height="250"></svg>
-    <div class="legend-row"><span>Required income = monthly rent × 12 ÷ 0.30</span></div>
-    <p class="insight">▲ FINDING: Some ZIP codes require well over six figures just to keep rent under 30% of income.</p>
-  </div>
-
-  <div class="chart-card">
-    <h2>4. Least Affordable ZIP Codes for This Income</h2>
-    <div class="chart-desc">National ZIP codes with the highest rent burden for the selected income</div>
-    <svg id="chart4" width="100%" height="250"></svg>
-    <div class="legend-row"><span>Higher bar = less affordable</span></div>
-    <p class="insight">▲ FINDING: These ZIP codes are where the selected income is stretched the most.</p>
-  </div>
-
-  <div class="chart-card">
-    <h2>5. Monthly Rent Over Budget</h2>
-    <div class="chart-desc">Where rent exceeds the selected income’s affordable monthly budget the most</div>
-    <svg id="chart5" width="100%" height="250"></svg>
-    <div class="legend-row"><span>Over budget = rent − 30% monthly income budget</span></div>
-    <p class="insight" id="insight5">▲ FINDING: This chart turns rent burden into dollars over budget per month.</p>
-  </div>
-
-  <div class="chart-card wide">
-    <h2>6. How Many ZIP Codes Become Affordable?</h2>
-    <div class="chart-desc">Number of ZIP codes affordable across different annual income levels</div>
-    <svg id="chart6" width="100%" height="360"></svg>
-    <div class="legend-row">
-      <span class="legend-dot" style="background:#7dd87d;"></span><span>Affordable ≤ 30%</span>
-      <span class="legend-dot" style="background:#facc15;"></span><span>Borderline ≤ 40%</span>
-    </div>
-    <p class="insight" id="insight6">▲ FINDING: More income unlocks more ZIP codes, but the increase is uneven.</p>
+    <p class="insight" id="insight1">▲ FINDING: The map shows how far the selected income stretches across states and counties.</p>
   </div>
 
 </div>
@@ -433,12 +438,16 @@
 <script>
 const ZIP_FILE = "./datasets/rent_income_zip_clean.csv";
 const STATE_FILE = "./datasets/rent_income_state_clean.csv";
+const US_ATLAS_TOPO = "https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json";
 
 const tooltip = d3.select("#tooltip");
 
 let ZIP_DATA = [];
 let STATE_DATA = [];
+let COUNTY_DATA = [];
 let US_STATES = null;
+let US_COUNTIES = null;
+let selectedMapState = "ALL";
 
 const stateToFips = {
   "AL":"01","AK":"02","AZ":"04","AR":"05","CA":"06","CO":"08","CT":"09","DE":"10","DC":"11",
@@ -448,6 +457,7 @@ const stateToFips = {
   "OK":"40","OR":"41","PA":"42","RI":"44","SC":"45","SD":"46","TN":"47","TX":"48","UT":"49",
   "VT":"50","VA":"51","WA":"53","WV":"54","WI":"55","WY":"56"
 };
+const fipsToState = Object.fromEntries(Object.entries(stateToFips).map(([abbr, fips]) => [fips, abbr]));
 
 function formatDollar(x) {
   return "$" + d3.format(",.0f")(x);
@@ -475,61 +485,43 @@ function burdenColor(burden) {
   return categoryColor(categoryFromBurden(burden));
 }
 
-function chartFrame(id, customHeight = 250) {
+function normalizeCountyName(name) {
+  return String(name || "")
+    .toLowerCase()
+    .replace(/\./g, "")
+    .replace(/'/g, "")
+    .replace(/\b(county|parish|borough|census area|municipality|city and borough|city)\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function chartFrame(id, customHeight = 560) {
   const W = document.getElementById(id).parentElement.clientWidth - 48;
   const H = customHeight;
-  const m = { top: 18, right: 30, bottom: 60, left: 82 };
-  const iW = W - m.left - m.right;
-  const iH = H - m.top - m.bottom;
-
   const svg = d3.select("#" + id)
     .attr("height", H)
     .html("");
-
-  const g = svg.append("g")
-    .attr("transform", `translate(${m.left},${m.top})`);
-
-  return { svg, g, W, H, m, iW, iH };
+  return { svg, W, H };
 }
 
-function addLabels(g, iW, iH, xLabel, yLabel) {
-  if (xLabel) {
-    g.append("text")
-      .attr("class", "axis-label")
-      .attr("x", iW / 2)
-      .attr("y", iH + 46)
-      .attr("text-anchor", "middle")
-      .text(xLabel);
-  }
+function cleanData(zipData, stateData, countyFeatures) {
+  const countyNameToFips = new Map();
 
-  if (yLabel) {
-    g.append("text")
-      .attr("class", "axis-label")
-      .attr("transform", "rotate(-90)")
-      .attr("x", -iH / 2)
-      .attr("y", -60)
-      .attr("text-anchor", "middle")
-      .text(yLabel);
-  }
-}
-
-function gridY(g, y, ticks, iW) {
-  ticks.forEach(t => {
-    g.append("line")
-      .attr("class", "grid-line")
-      .attr("x1", 0)
-      .attr("x2", iW)
-      .attr("y1", y(t))
-      .attr("y2", y(t));
+  countyFeatures.forEach(feature => {
+    const fips = String(feature.id).padStart(5, "0");
+    const state = fipsToState[fips.slice(0, 2)];
+    const countyName = feature.properties && feature.properties.name;
+    if (!state || !countyName) return;
+    countyNameToFips.set(`${state}|${normalizeCountyName(countyName)}`, fips);
   });
-}
 
-function cleanData(zipData, stateData) {
   zipData.forEach(d => {
     d.zip = String(d.zip).padStart(5, "0");
     d.city = d.city || "Unknown";
     d.state = d.state || "Unknown";
+    d.county = d.county || "Unknown County";
     d.monthly_rent = +d.monthly_rent;
+    d.num_returns = +d.num_returns || 0;
     d.avg_annual_income = +d.avg_annual_income;
     d.avg_monthly_income = +d.avg_monthly_income;
     d.local_rent_burden = +d.rent_burden;
@@ -563,34 +555,37 @@ function cleanData(zipData, stateData) {
     d.avg_annual_income > 0
   );
 
-  return { zipData, stateData };
-}
+  const countyRollup = d3.rollups(
+    zipData,
+    rows => {
+      const totalReturns = d3.sum(rows, r => r.num_returns || 0);
+      const weightedRent = totalReturns > 0
+        ? d3.sum(rows, r => r.monthly_rent * (r.num_returns || 0)) / totalReturns
+        : d3.mean(rows, r => r.monthly_rent);
+      const weightedIncome = totalReturns > 0
+        ? d3.sum(rows, r => r.avg_annual_income * (r.num_returns || 0)) / totalReturns
+        : d3.mean(rows, r => r.avg_annual_income);
+      const fips = countyNameToFips.get(`${rows[0].state}|${normalizeCountyName(rows[0].county)}`);
 
-function getSalaryZipData(salary) {
-  const monthlyIncome = salary / 12;
-  const monthlyBudget = salary * 0.30 / 12;
+      return {
+        state: rows[0].state,
+        county: rows[0].county,
+        fips,
+        avg_monthly_rent: weightedRent,
+        avg_annual_income: weightedIncome,
+        zip_count: rows.length
+      };
+    },
+    d => `${d.state}|${normalizeCountyName(d.county)}`
+  ).map(d => d[1]).filter(d => d.fips && isFinite(d.avg_monthly_rent));
 
-  return ZIP_DATA.map(d => {
-    const burden = d.monthly_rent / monthlyIncome;
-    const overBudget = d.monthly_rent - monthlyBudget;
-
-    return {
-      ...d,
-      salary_rent_burden: burden,
-      salary_rent_burden_percent: burden * 100,
-      salary_category: categoryFromBurden(burden),
-      monthly_budget: monthlyBudget,
-      over_budget: overBudget
-    };
-  });
+  return { zipData, stateData, countyData: countyRollup };
 }
 
 function getSalaryStateData(salary) {
   const monthlyIncome = salary / 12;
-
   return STATE_DATA.map(d => {
     const burden = d.avg_monthly_rent / monthlyIncome;
-
     return {
       ...d,
       salary_rent_burden: burden,
@@ -600,44 +595,114 @@ function getSalaryStateData(salary) {
   });
 }
 
-function drawSalaryMap(stateData, salary) {
-  const { svg, W, H } = chartFrame("chart1", 480);
+function getSalaryCountyData(salary) {
+  const monthlyIncome = salary / 12;
+  return COUNTY_DATA.map(d => {
+    const burden = d.avg_monthly_rent / monthlyIncome;
+    return {
+      ...d,
+      salary_rent_burden: burden,
+      salary_rent_burden_percent: burden * 100,
+      salary_category: categoryFromBurden(burden)
+    };
+  });
+}
 
-  const dataByFips = new Map(stateData.map(d => [d.fips, d]));
+function drawSalaryMap(stateData, countyData, salary) {
+  const { svg, W, H } = chartFrame("chart1", 560);
+  const stateByFips = new Map(stateData.map(d => [d.fips, d]));
+  const countyByFips = new Map(countyData.map(d => [d.fips, d]));
 
-  const projection = d3.geoAlbersUsa()
-    .fitSize([W - 30, H - 55], { type: "FeatureCollection", features: US_STATES });
+  const isCountyMode = selectedMapState !== "ALL";
+  const stateFeature = isCountyMode
+    ? US_STATES.find(d => String(d.id).padStart(2, "0") === stateToFips[selectedMapState])
+    : null;
+  const countyFeatures = isCountyMode
+    ? US_COUNTIES.filter(d => String(d.id).padStart(5, "0").slice(0, 2) === stateToFips[selectedMapState])
+    : [];
 
+  const projection = d3.geoAlbersUsa();
+  const fitFeatures = isCountyMode && stateFeature
+    ? { type: "FeatureCollection", features: countyFeatures.length ? countyFeatures : [stateFeature] }
+    : { type: "FeatureCollection", features: US_STATES };
+  projection.fitSize([W - 30, H - 60], fitFeatures);
   const path = d3.geoPath(projection);
+  const mapG = svg.append("g").attr("transform", "translate(15, 10)");
 
-  svg.append("g")
-    .attr("transform", "translate(15, 10)")
-    .selectAll("path")
-    .data(US_STATES)
+  if (!isCountyMode) {
+    mapG.selectAll("path")
+      .data(US_STATES)
+      .enter()
+      .append("path")
+      .attr("class", "state")
+      .attr("d", path)
+      .attr("fill", d => {
+        const row = stateByFips.get(String(d.id).padStart(2, "0"));
+        return row ? burdenColor(row.salary_rent_burden) : "#1f2937";
+      })
+      .attr("opacity", d => stateByFips.has(String(d.id).padStart(2, "0")) ? 0.95 : 0.35)
+      .on("click", (event, d) => {
+        const abbr = fipsToState[String(d.id).padStart(2, "0")];
+        if (!abbr) return;
+        selectedMapState = abbr;
+        d3.select("#stateSelect").property("value", abbr);
+        updateCharts(salary);
+      })
+      .on("mousemove", (event, d) => {
+        const fips = String(d.id).padStart(2, "0");
+        const row = stateByFips.get(fips);
+        if (!row) return;
+        tooltip
+          .style("opacity", 1)
+          .style("left", event.clientX + 14 + "px")
+          .style("top", event.clientY + 14 + "px")
+          .html(`
+            <strong>${row.state}</strong><br>
+            Click to zoom into counties<br>
+            Selected income: ${formatDollar(salary)}<br>
+            Avg monthly rent: ${formatDollar(row.avg_monthly_rent)}<br>
+            Rent burden: ${formatPercent(row.salary_rent_burden_percent)}<br>
+            Category: ${row.salary_category}<br>
+            ZIPs included: ${row.zip_count}
+          `);
+      })
+      .on("mouseleave", () => tooltip.style("opacity", 0));
+
+    const affordableStates = stateData.filter(d => d.salary_rent_burden <= 0.30).length;
+    svg.append("text")
+      .attr("x", W / 2)
+      .attr("y", H - 18)
+      .attr("class", "axis-label")
+      .attr("text-anchor", "middle")
+      .text(`${affordableStates} states are affordable at ${formatDollar(salary)} using the 30% rule`);
+
+    document.getElementById("mapModeLabel").textContent = "Viewing: all states";
+    document.getElementById("insight1").textContent =
+      `▲ FINDING: At ${formatDollar(salary)}, ${affordableStates} states are affordable on average. Click a state to see county detail.`;
+    return;
+  }
+
+  mapG.selectAll("path.county")
+    .data(countyFeatures)
     .enter()
     .append("path")
-    .attr("class", "state")
+    .attr("class", "county")
     .attr("d", path)
     .attr("fill", d => {
-      const fips = String(d.id).padStart(2, "0");
-      const row = dataByFips.get(fips);
+      const row = countyByFips.get(String(d.id).padStart(5, "0"));
       return row ? burdenColor(row.salary_rent_burden) : "#1f2937";
     })
-    .attr("opacity", d => {
-      const fips = String(d.id).padStart(2, "0");
-      return dataByFips.has(fips) ? 0.95 : 0.35;
-    })
+    .attr("opacity", d => countyByFips.has(String(d.id).padStart(5, "0")) ? 0.95 : 0.28)
     .on("mousemove", (event, d) => {
-      const fips = String(d.id).padStart(2, "0");
-      const row = dataByFips.get(fips);
+      const fips = String(d.id).padStart(5, "0");
+      const row = countyByFips.get(fips);
       if (!row) return;
-
       tooltip
         .style("opacity", 1)
         .style("left", event.clientX + 14 + "px")
         .style("top", event.clientY + 14 + "px")
         .html(`
-          <strong>${row.state}</strong><br>
+          <strong>${row.county}, ${row.state}</strong><br>
           Selected income: ${formatDollar(salary)}<br>
           Avg monthly rent: ${formatDollar(row.avg_monthly_rent)}<br>
           Rent burden: ${formatPercent(row.salary_rent_burden_percent)}<br>
@@ -647,379 +712,29 @@ function drawSalaryMap(stateData, salary) {
     })
     .on("mouseleave", () => tooltip.style("opacity", 0));
 
-  const affordableStates = stateData.filter(d => d.salary_rent_burden <= 0.30).length;
+  if (stateFeature) {
+    mapG.append("path")
+      .datum(stateFeature)
+      .attr("d", path)
+      .attr("fill", "none")
+      .attr("stroke", "#fff9ed")
+      .attr("stroke-width", 1.25)
+      .attr("pointer-events", "none");
+  }
+
+  const visibleCounties = countyData.filter(d => d.state === selectedMapState);
+  const affordableCounties = visibleCounties.filter(d => d.salary_rent_burden <= 0.30).length;
 
   svg.append("text")
     .attr("x", W / 2)
     .attr("y", H - 18)
     .attr("class", "axis-label")
     .attr("text-anchor", "middle")
-    .text(`${affordableStates} states are affordable at ${formatDollar(salary)} using the 30% rule`);
+    .text(`${affordableCounties} counties in ${selectedMapState} are affordable at ${formatDollar(salary)} using the 30% rule`);
 
+  document.getElementById("mapModeLabel").textContent = `Viewing: ${selectedMapState} counties`;
   document.getElementById("insight1").textContent =
-    `▲ FINDING: At ${formatDollar(salary)}, ${affordableStates} states are affordable on average.`;
-}
-
-function drawWorstZipByState(zipData, selectedState, salary) {
-  const rows = zipData
-    .filter(d => d.state === selectedState)
-    .sort((a, b) => b.salary_rent_burden - a.salary_rent_burden)
-    .slice(0, 12);
-
-  const { g, iW, iH } = chartFrame("chart2", 250);
-
-  if (!rows.length) {
-    g.append("text")
-      .attr("x", iW / 2)
-      .attr("y", iH / 2)
-      .attr("text-anchor", "middle")
-      .attr("fill", "#8a91a3")
-      .text("No ZIP data available for selected state.");
-    return;
-  }
-
-  const x = d3.scaleLinear()
-    .domain([0, d3.max(rows, d => d.salary_rent_burden_percent)])
-    .nice()
-    .range([0, iW]);
-
-  const y = d3.scaleBand()
-    .domain(rows.map(d => d.zip))
-    .range([0, iH])
-    .padding(0.22);
-
-  g.append("g")
-    .attr("class", "axis")
-    .call(d3.axisLeft(y).tickSize(0));
-
-  g.append("g")
-    .attr("class", "axis")
-    .attr("transform", `translate(0,${iH})`)
-    .call(d3.axisBottom(x).ticks(4).tickFormat(d => d + "%"));
-
-  g.selectAll("rect")
-    .data(rows)
-    .enter()
-    .append("rect")
-    .attr("x", 0)
-    .attr("y", d => y(d.zip))
-    .attr("width", d => x(d.salary_rent_burden_percent))
-    .attr("height", y.bandwidth())
-    .attr("fill", d => burdenColor(d.salary_rent_burden))
-    .attr("rx", 2)
-    .on("mousemove", (event, d) => showZipTooltip(event, d, salary))
-    .on("mouseleave", () => tooltip.style("opacity", 0));
-
-  g.selectAll(".label")
-    .data(rows)
-    .enter()
-    .append("text")
-    .attr("x", d => x(d.salary_rent_burden_percent) + 5)
-    .attr("y", d => y(d.zip) + y.bandwidth() / 2 + 3)
-    .attr("fill", "#b0b6c4")
-    .attr("font-size", "9px")
-    .text(d => formatPercent(d.salary_rent_burden_percent));
-
-  addLabels(g, iW, iH, `Rent burden in ${selectedState}`, "");
-
-  document.getElementById("insight2").textContent =
-    `▲ FINDING: In ${selectedState}, ZIP ${rows[0].zip} is the least affordable for a ${formatDollar(salary)} income.`;
-}
-
-function drawRequiredIncome(zipData) {
-  const rows = [...zipData]
-    .sort((a, b) => b.required_income - a.required_income)
-    .slice(0, 12);
-
-  const { g, iW, iH } = chartFrame("chart3", 250);
-
-  const x = d3.scaleLinear()
-    .domain([0, d3.max(rows, d => d.required_income)])
-    .nice()
-    .range([0, iW]);
-
-  const y = d3.scaleBand()
-    .domain(rows.map(d => `${d.zip} ${d.state}`))
-    .range([0, iH])
-    .padding(0.22);
-
-  g.append("g")
-    .attr("class", "axis")
-    .call(d3.axisLeft(y).tickSize(0));
-
-  g.append("g")
-    .attr("class", "axis")
-    .attr("transform", `translate(0,${iH})`)
-    .call(d3.axisBottom(x).ticks(4).tickFormat(d => "$" + d3.format(".2s")(d)));
-
-  g.selectAll("rect")
-    .data(rows)
-    .enter()
-    .append("rect")
-    .attr("x", 0)
-    .attr("y", d => y(`${d.zip} ${d.state}`))
-    .attr("width", d => x(d.required_income))
-    .attr("height", y.bandwidth())
-    .attr("fill", "#ffb84d")
-    .attr("rx", 2)
-    .on("mousemove", (event, d) => {
-      tooltip
-        .style("opacity", 1)
-        .style("left", event.clientX + 14 + "px")
-        .style("top", event.clientY + 14 + "px")
-        .html(`
-          <strong>${d.zip} — ${d.city}, ${d.state}</strong><br>
-          Monthly rent: ${formatDollar(d.monthly_rent)}<br>
-          Income needed for 30% rule: ${formatDollar(d.required_income)}<br>
-          Local avg income: ${formatDollar(d.avg_annual_income)}
-        `);
-    })
-    .on("mouseleave", () => tooltip.style("opacity", 0));
-
-  g.selectAll(".label")
-    .data(rows)
-    .enter()
-    .append("text")
-    .attr("x", d => x(d.required_income) + 5)
-    .attr("y", d => y(`${d.zip} ${d.state}`) + y.bandwidth() / 2 + 3)
-    .attr("fill", "#b0b6c4")
-    .attr("font-size", "9px")
-    .text(d => formatDollar(d.required_income));
-
-  addLabels(g, iW, iH, "Annual income needed", "");
-}
-
-function drawLeastAffordable(zipData, salary) {
-  const rows = [...zipData]
-    .sort((a, b) => b.salary_rent_burden - a.salary_rent_burden)
-    .slice(0, 12);
-
-  const { g, iW, iH } = chartFrame("chart4", 250);
-
-  const x = d3.scaleLinear()
-    .domain([0, d3.max(rows, d => d.salary_rent_burden_percent)])
-    .nice()
-    .range([0, iW]);
-
-  const y = d3.scaleBand()
-    .domain(rows.map(d => `${d.zip} ${d.state}`))
-    .range([0, iH])
-    .padding(0.22);
-
-  g.append("g")
-    .attr("class", "axis")
-    .call(d3.axisLeft(y).tickSize(0));
-
-  g.append("g")
-    .attr("class", "axis")
-    .attr("transform", `translate(0,${iH})`)
-    .call(d3.axisBottom(x).ticks(4).tickFormat(d => d + "%"));
-
-  g.selectAll("rect")
-    .data(rows)
-    .enter()
-    .append("rect")
-    .attr("x", 0)
-    .attr("y", d => y(`${d.zip} ${d.state}`))
-    .attr("width", d => x(d.salary_rent_burden_percent))
-    .attr("height", y.bandwidth())
-    .attr("fill", d => burdenColor(d.salary_rent_burden))
-    .attr("rx", 2)
-    .on("mousemove", (event, d) => showZipTooltip(event, d, salary))
-    .on("mouseleave", () => tooltip.style("opacity", 0));
-
-  g.selectAll(".label")
-    .data(rows)
-    .enter()
-    .append("text")
-    .attr("x", d => x(d.salary_rent_burden_percent) + 5)
-    .attr("y", d => y(`${d.zip} ${d.state}`) + y.bandwidth() / 2 + 3)
-    .attr("fill", "#b0b6c4")
-    .attr("font-size", "9px")
-    .text(d => formatPercent(d.salary_rent_burden_percent));
-
-  addLabels(g, iW, iH, "Rent burden with selected income", "");
-}
-
-function drawOverBudget(zipData, salary) {
-  const rows = [...zipData]
-    .filter(d => d.over_budget > 0)
-    .sort((a, b) => b.over_budget - a.over_budget)
-    .slice(0, 12);
-
-  const { g, iW, iH } = chartFrame("chart5", 250);
-
-  if (!rows.length) {
-    g.append("text")
-      .attr("x", iW / 2)
-      .attr("y", iH / 2)
-      .attr("text-anchor", "middle")
-      .attr("fill", "#8a91a3")
-      .text("No ZIP codes are over budget at this income.");
-    return;
-  }
-
-  const x = d3.scaleLinear()
-    .domain([0, d3.max(rows, d => d.over_budget)])
-    .nice()
-    .range([0, iW]);
-
-  const y = d3.scaleBand()
-    .domain(rows.map(d => `${d.zip} ${d.state}`))
-    .range([0, iH])
-    .padding(0.22);
-
-  g.append("g")
-    .attr("class", "axis")
-    .call(d3.axisLeft(y).tickSize(0));
-
-  g.append("g")
-    .attr("class", "axis")
-    .attr("transform", `translate(0,${iH})`)
-    .call(d3.axisBottom(x).ticks(4).tickFormat(d => "$" + d3.format(",")(d)));
-
-  g.selectAll("rect")
-    .data(rows)
-    .enter()
-    .append("rect")
-    .attr("x", 0)
-    .attr("y", d => y(`${d.zip} ${d.state}`))
-    .attr("width", d => x(d.over_budget))
-    .attr("height", y.bandwidth())
-    .attr("fill", "#ef4444")
-    .attr("rx", 2)
-    .on("mousemove", (event, d) => showZipTooltip(event, d, salary))
-    .on("mouseleave", () => tooltip.style("opacity", 0));
-
-  g.selectAll(".label")
-    .data(rows)
-    .enter()
-    .append("text")
-    .attr("x", d => x(d.over_budget) + 5)
-    .attr("y", d => y(`${d.zip} ${d.state}`) + y.bandwidth() / 2 + 3)
-    .attr("fill", "#b0b6c4")
-    .attr("font-size", "9px")
-    .text(d => formatDollar(d.over_budget));
-
-  addLabels(g, iW, iH, "Monthly dollars over budget", "");
-
-  document.getElementById("insight5").textContent =
-    `▲ FINDING: At ${formatDollar(salary)}, the worst ZIP code is ${formatDollar(rows[0].over_budget)} over budget per month.`;
-}
-
-function drawAffordableBySalary(zipBase, currentSalary) {
-  const salaries = d3.range(30000, 250001, 5000).map(salary => {
-    const monthlyIncome = salary / 12;
-    const affordable = zipBase.filter(d => d.monthly_rent / monthlyIncome <= 0.30).length;
-    const borderline = zipBase.filter(d => d.monthly_rent / monthlyIncome <= 0.40).length;
-
-    return { salary, affordable, borderline };
-  });
-
-  const { g, iW, iH } = chartFrame("chart6", 360);
-
-  const x = d3.scaleLinear()
-    .domain(d3.extent(salaries, d => d.salary))
-    .range([0, iW]);
-
-  const y = d3.scaleLinear()
-    .domain([0, d3.max(salaries, d => d.borderline)])
-    .nice()
-    .range([iH, 0]);
-
-  gridY(g, y, y.ticks(5), iW);
-
-  g.append("g")
-    .attr("class", "axis")
-    .attr("transform", `translate(0,${iH})`)
-    .call(d3.axisBottom(x).ticks(6).tickFormat(d => "$" + d3.format(".2s")(d)));
-
-  g.append("g")
-    .attr("class", "axis")
-    .call(d3.axisLeft(y).ticks(5));
-
-  addLabels(g, iW, iH, "Annual income", "Number of ZIP codes");
-
-  const lineAffordable = d3.line()
-    .x(d => x(d.salary))
-    .y(d => y(d.affordable))
-    .curve(d3.curveMonotoneX);
-
-  const lineBorderline = d3.line()
-    .x(d => x(d.salary))
-    .y(d => y(d.borderline))
-    .curve(d3.curveMonotoneX);
-
-  g.append("path")
-    .datum(salaries)
-    .attr("d", lineBorderline)
-    .attr("fill", "none")
-    .attr("stroke", "#facc15")
-    .attr("stroke-width", 2)
-    .attr("stroke-dasharray", "5,3");
-
-  g.append("path")
-    .datum(salaries)
-    .attr("d", lineAffordable)
-    .attr("fill", "none")
-    .attr("stroke", "#7dd87d")
-    .attr("stroke-width", 2);
-
-  const current = salaries.find(d => d.salary === currentSalary) || salaries[0];
-
-  g.append("line")
-    .attr("x1", x(currentSalary))
-    .attr("x2", x(currentSalary))
-    .attr("y1", 0)
-    .attr("y2", iH)
-    .attr("stroke", "#fff9ed")
-    .attr("stroke-width", 1)
-    .attr("stroke-dasharray", "4,3");
-
-  g.append("circle")
-    .attr("cx", x(currentSalary))
-    .attr("cy", y(current.affordable))
-    .attr("r", 4)
-    .attr("fill", "#7dd87d");
-
-  g.append("circle")
-    .attr("cx", x(currentSalary))
-    .attr("cy", y(current.borderline))
-    .attr("r", 4)
-    .attr("fill", "#facc15");
-
-  g.append("text")
-    .attr("x", iW - 155)
-    .attr("y", 16)
-    .attr("fill", "#7dd87d")
-    .attr("font-size", "9px")
-    .text("Affordable ≤30%");
-
-  g.append("text")
-    .attr("x", iW - 155)
-    .attr("y", 32)
-    .attr("fill", "#facc15")
-    .attr("font-size", "9px")
-    .text("Borderline ≤40%");
-
-  document.getElementById("insight6").textContent =
-    `▲ FINDING: At ${formatDollar(currentSalary)}, ${current.affordable.toLocaleString()} ZIP codes are affordable using the 30% rule.`;
-}
-
-function showZipTooltip(event, d, salary) {
-  tooltip
-    .style("opacity", 1)
-    .style("left", event.clientX + 14 + "px")
-    .style("top", event.clientY + 14 + "px")
-    .html(`
-      <strong>${d.zip} — ${d.city}, ${d.state}</strong><br>
-      Selected income: ${formatDollar(salary)}<br>
-      Monthly rent: ${formatDollar(d.monthly_rent)}<br>
-      Monthly budget: ${formatDollar(d.monthly_budget)}<br>
-      Rent burden: ${formatPercent(d.salary_rent_burden_percent)}<br>
-      Required income: ${formatDollar(d.required_income)}<br>
-      Local avg income: ${formatDollar(d.avg_annual_income)}
-    `);
+    `▲ FINDING: At ${formatDollar(salary)}, ${affordableCounties} counties in ${selectedMapState} are affordable on average.`;
 }
 
 function populateStateDropdown() {
@@ -1029,41 +744,43 @@ function populateStateDropdown() {
 
   const select = d3.select("#stateSelect");
 
-  select.selectAll("option")
+  select.append("option")
+    .attr("value", "ALL")
+    .text("All states");
+
+  select.selectAll("option.state-option")
     .data(states)
     .enter()
     .append("option")
+    .attr("class", "state-option")
     .attr("value", d => d)
     .text(d => d);
 
-  select.property("value", states.includes("CA") ? "CA" : states[0]);
+  select.property("value", "ALL");
 }
 
 function updateCharts(salary) {
-  const selectedState = document.getElementById("stateSelect").value;
-  const salaryZipData = getSalaryZipData(salary);
+  selectedMapState = document.getElementById("stateSelect").value;
   const salaryStateData = getSalaryStateData(salary);
+  const salaryCountyData = getSalaryCountyData(salary);
 
   d3.select("#salaryValue").text(formatDollar(salary));
-
-  drawSalaryMap(salaryStateData, salary);
-  drawWorstZipByState(salaryZipData, selectedState, salary);
-  drawRequiredIncome(salaryZipData);
-  drawLeastAffordable(salaryZipData, salary);
-  drawOverBudget(salaryZipData, salary);
-  drawAffordableBySalary(ZIP_DATA, salary);
+  drawSalaryMap(salaryStateData, salaryCountyData, salary);
 }
 
 Promise.all([
   d3.csv(ZIP_FILE),
   d3.csv(STATE_FILE),
-  d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json")
-]).then(([zipRaw, stateRaw, us]) => {
-  const cleaned = cleanData(zipRaw, stateRaw);
+  d3.json(US_ATLAS_TOPO)
+]).then(([zipRaw, stateRaw, usTopo]) => {
+  US_STATES = topojson.feature(usTopo, usTopo.objects.states).features;
+  US_COUNTIES = topojson.feature(usTopo, usTopo.objects.counties).features;
+
+  const cleaned = cleanData(zipRaw, stateRaw, US_COUNTIES);
 
   ZIP_DATA = cleaned.zipData;
   STATE_DATA = cleaned.stateData;
-  US_STATES = topojson.feature(us, us.objects.states).features;
+  COUNTY_DATA = cleaned.countyData;
 
   populateStateDropdown();
 
@@ -1072,6 +789,7 @@ Promise.all([
 
   const slider = document.getElementById("salarySlider");
   const stateSelect = document.getElementById("stateSelect");
+  const resetButton = document.getElementById("resetMapButton");
 
   updateCharts(+slider.value);
 
@@ -1083,10 +801,15 @@ Promise.all([
     updateCharts(+slider.value);
   });
 
+  resetButton.addEventListener("click", function() {
+    stateSelect.value = "ALL";
+    updateCharts(+slider.value);
+  });
+
 }).catch(err => {
   console.error(err);
   document.getElementById("loading").textContent =
-    "DATA LOAD FAILED. Make sure your folder is set up as: CanILiveThere/index.html and CanILiveThere/datasets/rent_income_zip_clean.csv + rent_income_state_clean.csv. Also run this with Live Server.";
+    "DATA LOAD FAILED. Run this with Live Server and make sure the browser can access ./datasets/rent_income_zip_clean.csv, ./datasets/rent_income_state_clean.csv, and the D3/topojson CDN.";
 });
 </script>
 </body>
