@@ -6,23 +6,152 @@
   <title>Can You Live There? — Explorable Rent Affordability</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
+  <!-- ── Animated hero ────────────────────────────────── -->
   <header class="hero">
-    <div>
-      <p class="eyebrow">Explorable Explanation</p>
-      <h1>Can You Live There?</h1>
-      <p class="hero-subtitle">A $75,000 salary can feel comfortable in one county and impossible in another.</p>
+    <div class="hero-scene" aria-hidden="true">
+      <!-- Sun -->
+      <div class="sun">
+        <div class="sun-rays"></div>
+      </div>
+      <!-- Clouds -->
+      <div class="cloud cloud-1"></div>
+      <div class="cloud cloud-2"></div>
+      <div class="cloud cloud-3"></div>
+      <!-- Cityscape SVG -->
+      <svg class="cityscape" viewBox="0 0 1440 300" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
+        <!-- Back row buildings -->
+        <rect x="0"   y="180" width="60"  height="120" fill="#17B3D9" opacity="0.45"/>
+        <rect x="55"  y="140" width="45"  height="160" fill="#FC8A10" opacity="0.4"/>
+        <rect x="95"  y="160" width="70"  height="140" fill="#E2C1DE" opacity="0.5"/>
+        <rect x="160" y="120" width="50"  height="180" fill="#17B3D9" opacity="0.4"/>
+        <rect x="205" y="155" width="80"  height="145" fill="#FC8A10" opacity="0.35"/>
+        <rect x="280" y="110" width="55"  height="190" fill="#E2C1DE" opacity="0.45"/>
+        <rect x="330" y="145" width="65"  height="155" fill="#17B3D9" opacity="0.38"/>
+        <rect x="390" y="130" width="45"  height="170" fill="#FC8A10" opacity="0.4"/>
+        <rect x="430" y="165" width="90"  height="135" fill="#E2C1DE" opacity="0.42"/>
+        <rect x="515" y="125" width="55"  height="175" fill="#17B3D9" opacity="0.4"/>
+        <rect x="565" y="150" width="70"  height="150" fill="#FC8A10" opacity="0.38"/>
+        <rect x="630" y="100" width="60"  height="200" fill="#E2C1DE" opacity="0.5"/>
+        <rect x="685" y="140" width="50"  height="160" fill="#17B3D9" opacity="0.42"/>
+        <rect x="730" y="120" width="80"  height="180" fill="#FC8A10" opacity="0.4"/>
+        <rect x="805" y="155" width="55"  height="145" fill="#E2C1DE" opacity="0.45"/>
+        <rect x="855" y="115" width="65"  height="185" fill="#17B3D9" opacity="0.4"/>
+        <rect x="915" y="145" width="75"  height="155" fill="#FC8A10" opacity="0.38"/>
+        <rect x="985" y="130" width="50"  height="170" fill="#E2C1DE" opacity="0.5"/>
+        <rect x="1030" y="160" width="70" height="140" fill="#17B3D9" opacity="0.4"/>
+        <rect x="1095" y="120" width="55" height="180" fill="#FC8A10" opacity="0.42"/>
+        <rect x="1145" y="145" width="80" height="155" fill="#E2C1DE" opacity="0.45"/>
+        <rect x="1220" y="110" width="60" height="190" fill="#17B3D9" opacity="0.4"/>
+        <rect x="1275" y="150" width="50" height="150" fill="#FC8A10" opacity="0.38"/>
+        <rect x="1320" y="130" width="75" height="170" fill="#E2C1DE" opacity="0.48"/>
+        <rect x="1390" y="165" width="55" height="135" fill="#17B3D9" opacity="0.4"/>
+
+        <!-- Front row houses -->
+        <!-- House: body + roof as polygon -->
+        <g class="house" transform="translate(30,210)">
+          <rect x="0" y="30" width="70" height="60" fill="#FC8A10"/>
+          <polygon points="35,0 70,30 0,30" fill="#c96800"/>
+          <rect x="25" y="50" width="20" height="40" fill="#EDF1F4" opacity="0.6"/>
+          <rect x="5"  y="45" width="15" height="15" fill="#EDF1F4" opacity="0.5"/>
+        </g>
+        <g class="house" transform="translate(130,225)">
+          <rect x="0" y="25" width="55" height="50" fill="#E2C1DE"/>
+          <polygon points="27,0 55,25 0,25" fill="#b8a0ba"/>
+          <rect x="18" y="42" width="18" height="33" fill="#EDF1F4" opacity="0.6"/>
+        </g>
+        <g class="house" transform="translate(220,200)">
+          <rect x="0" y="35" width="85" height="70" fill="#17B3D9" opacity="0.85"/>
+          <polygon points="42,0 85,35 0,35" fill="#0e88a8"/>
+          <rect x="30" y="55" width="25" height="50" fill="#EDF1F4" opacity="0.65"/>
+          <rect x="8"  y="50" width="18" height="18" fill="#EDF1F4" opacity="0.5"/>
+          <rect x="59" y="50" width="18" height="18" fill="#EDF1F4" opacity="0.5"/>
+        </g>
+        <g class="house" transform="translate(340,218)">
+          <rect x="0" y="28" width="60" height="55" fill="#FC8A10"/>
+          <polygon points="30,0 60,28 0,28" fill="#c96800"/>
+          <rect x="20" y="44" width="20" height="38" fill="#EDF1F4" opacity="0.6"/>
+        </g>
+        <g class="house" transform="translate(435,210)">
+          <rect x="0" y="30" width="75" height="60" fill="#E2C1DE"/>
+          <polygon points="37,0 75,30 0,30" fill="#b8a0ba"/>
+          <rect x="27" y="48" width="22" height="42" fill="#EDF1F4" opacity="0.6"/>
+          <rect x="6"  y="45" width="16" height="16" fill="#EDF1F4" opacity="0.5"/>
+        </g>
+        <g class="house" transform="translate(545,205)">
+          <rect x="0" y="32" width="80" height="65" fill="#FC8A10"/>
+          <polygon points="40,0 80,32 0,32" fill="#c96800"/>
+          <rect x="28" y="50" width="24" height="47" fill="#EDF1F4" opacity="0.65"/>
+          <rect x="8"  y="48" width="16" height="16" fill="#EDF1F4" opacity="0.5"/>
+          <rect x="56" y="48" width="16" height="16" fill="#EDF1F4" opacity="0.5"/>
+        </g>
+        <g class="house" transform="translate(660,215)">
+          <rect x="0" y="28" width="65" height="57" fill="#17B3D9" opacity="0.85"/>
+          <polygon points="32,0 65,28 0,28" fill="#0e88a8"/>
+          <rect x="22" y="44" width="21" height="40" fill="#EDF1F4" opacity="0.6"/>
+        </g>
+        <g class="house" transform="translate(760,208)">
+          <rect x="0" y="30" width="72" height="62" fill="#E2C1DE"/>
+          <polygon points="36,0 72,30 0,30" fill="#b8a0ba"/>
+          <rect x="26" y="48" width="20" height="44" fill="#EDF1F4" opacity="0.6"/>
+          <rect x="5"  y="46" width="16" height="16" fill="#EDF1F4" opacity="0.5"/>
+        </g>
+        <g class="house" transform="translate(868,212)">
+          <rect x="0" y="29" width="68" height="59" fill="#FC8A10"/>
+          <polygon points="34,0 68,29 0,29" fill="#c96800"/>
+          <rect x="24" y="46" width="20" height="42" fill="#EDF1F4" opacity="0.6"/>
+        </g>
+        <g class="house" transform="translate(970,202)">
+          <rect x="0" y="33" width="82" height="68" fill="#17B3D9" opacity="0.85"/>
+          <polygon points="41,0 82,33 0,33" fill="#0e88a8"/>
+          <rect x="29" y="52" width="24" height="49" fill="#EDF1F4" opacity="0.65"/>
+          <rect x="8"  y="50" width="17" height="17" fill="#EDF1F4" opacity="0.5"/>
+          <rect x="57" y="50" width="17" height="17" fill="#EDF1F4" opacity="0.5"/>
+        </g>
+        <g class="house" transform="translate(1085,218)">
+          <rect x="0" y="27" width="58" height="55" fill="#E2C1DE"/>
+          <polygon points="29,0 58,27 0,27" fill="#b8a0ba"/>
+          <rect x="19" y="43" width="20" height="38" fill="#EDF1F4" opacity="0.6"/>
+        </g>
+        <g class="house" transform="translate(1178,206)">
+          <rect x="0" y="31" width="76" height="63" fill="#FC8A10"/>
+          <polygon points="38,0 76,31 0,31" fill="#c96800"/>
+          <rect x="27" y="49" width="22" height="45" fill="#EDF1F4" opacity="0.6"/>
+          <rect x="6"  y="47" width="16" height="16" fill="#EDF1F4" opacity="0.5"/>
+        </g>
+        <g class="house" transform="translate(1290,210)">
+          <rect x="0" y="30" width="70" height="60" fill="#17B3D9" opacity="0.85"/>
+          <polygon points="35,0 70,30 0,30" fill="#0e88a8"/>
+          <rect x="25" y="48" width="20" height="42" fill="#EDF1F4" opacity="0.6"/>
+        </g>
+        <g class="house" transform="translate(1390,215)">
+          <rect x="0" y="28" width="60" height="57" fill="#E2C1DE"/>
+          <polygon points="30,0 60,28 0,28" fill="#b8a0ba"/>
+          <rect x="20" y="44" width="20" height="40" fill="#EDF1F4" opacity="0.6"/>
+        </g>
+
+        <!-- Ground -->
+        <rect x="0" y="298" width="1440" height="4" fill="#FC8A10" opacity="0.35"/>
+      </svg>
     </div>
-    <div class="tag">
-      <span>Zillow ZORI rent data</span><br>
-      <span>IRS 2022 AGI by ZIP</span><br>
-      <span>30% rent affordability rule</span>
+
+    <!-- Hero text, sits on top -->
+    <div class="hero-content">
+      <p class="eyebrow">Explorable Explanation</p>
+      <h1>Can You Live<br><em>There?</em></h1>
+      <p class="hero-subtitle">A $75,000 salary can feel comfortable in one county and impossible in another.</p>
+      <div class="tag">
+        <span>Zillow ZORI rent data</span>
+        <span>IRS 2022 AGI by ZIP</span>
+        <span>30% rent affordability rule</span>
+      </div>
     </div>
   </header>
 
@@ -64,9 +193,7 @@
         <div class="chapter-text">
           <p class="eyebrow">Chapter 1</p>
           <h2>The affordability illusion</h2>
-          <p>
-            Start with one income and watch the map answer a simple question: where does rent stay below the 30% rule?
-          </p>
+          <p>Start with one income and watch the map answer a simple question: where does rent stay below the 30% rule?</p>
           <div class="stat-grid">
             <div class="stat-card"><span id="affordableStateCount">—</span><small>affordable states</small></div>
             <div class="stat-card"><span id="affordableCountyCount">—</span><small>affordable counties</small></div>
@@ -94,9 +221,7 @@
         <div class="chapter-text">
           <p class="eyebrow">Chapter 2</p>
           <h2>What happens when income changes?</h2>
-          <p>
-            Use the income buttons or scroll through the chapters. The page updates the same map, so the reader can see affordability expand and contract instead of reading a long explanation.
-          </p>
+          <p>Use the income buttons or scroll through the chapters. The page updates the same map, so you can see affordability expand and contract.</p>
           <div class="salary-buttons">
             <button class="salary-jump" data-salary="40000">$40k</button>
             <button class="salary-jump" data-salary="60000">$60k</button>
@@ -116,9 +241,7 @@
         <div class="chapter-text">
           <p class="eyebrow">Chapter 3</p>
           <h2>Same salary, different life</h2>
-          <p>
-            Click counties on the zoomed map or use the dropdowns below. The comparison makes the main argument concrete: the same salary can produce very different rent burdens.
-          </p>
+          <p>Click counties on the zoomed map or use the dropdowns below. The comparison makes the argument concrete: the same salary produces very different rent burdens.</p>
           <div class="control-row mini-controls">
             <label for="compareA">Place A</label>
             <select id="compareA"></select>
@@ -139,9 +262,7 @@
         <div class="chapter-text">
           <p class="eyebrow">Chapter 4</p>
           <h2>Follow your dream location</h2>
-          <p>
-            Instead of asking “can I afford this place?”, flip the question: “how much would I need to earn to live there without being rent-burdened?”
-          </p>
+          <p>Instead of asking "can I afford this place?", flip the question: "how much would I need to earn to live there without being rent-burdened?"</p>
           <div class="control-row mini-controls">
             <label for="dreamSelect">Dream county</label>
             <select id="dreamSelect"></select>
@@ -155,22 +276,37 @@
         </div>
       </section>
 
-      <section class="chapter">
+      <section class="chapter chapter-wide">
         <div class="chapter-text">
           <p class="eyebrow">Chapter 5</p>
           <h2>Where would you live?</h2>
-          <p>
-            The ending turns the article into a personalized recommendation. Pick preferences and the project highlights counties that are affordable for the selected salary.
-          </p>
-          <div class="checkbox-row">
-            <label><input type="checkbox" id="prefWarm"> warm states</label>
-            <label><input type="checkbox" id="prefCoastal"> coastal states</label>
-            <label><input type="checkbox" id="prefUrban"> more ZIP data</label>
+          <p>Personalize your search. Pick what matters to you and see which counties are actually affordable at your current income — then see them on the map.</p>
+          <div class="pref-section">
+            <p class="pref-label">Climate &amp; geography</p>
+            <div class="checkbox-row">
+              <label><input type="checkbox" id="prefWarm"> ☀️ warm states</label>
+              <label><input type="checkbox" id="prefCoastal"> 🌊 coastal states</label>
+              <label><input type="checkbox" id="prefMidwest"> 🌽 midwest</label>
+            </div>
+          </div>
+          <div class="pref-section">
+            <p class="pref-label">Lifestyle</p>
+            <div class="checkbox-row">
+              <label><input type="checkbox" id="prefUrban"> 🏙️ more urban (more ZIP data)</label>
+              <label><input type="checkbox" id="prefLowRent"> 💸 very low rent (&lt;$1,200/mo)</label>
+              <label><input type="checkbox" id="prefBuffer"> 🛡️ comfortable buffer (&lt;20%)</label>
+            </div>
           </div>
         </div>
-        <div class="visual-card">
+        <div class="visual-card ch5-card">
           <h3>Top affordable matches</h3>
-          <div id="recommendationList" class="recommendation-list"></div>
+          <div class="ch5-layout">
+            <div id="recommendationList" class="recommendation-list"></div>
+            <div class="rec-map-wrap">
+              <p class="rec-map-label">Matched counties on the map</p>
+              <svg id="recMapChart" width="100%" height="320"></svg>
+            </div>
+          </div>
         </div>
       </section>
     </section>
