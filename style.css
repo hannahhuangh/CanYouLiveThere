@@ -99,15 +99,11 @@ p { color: var(--muted); line-height: 1.8; font-size: 0.9rem; }
 /* Sun */
 .sun {
   position: absolute;
-  top: 8%;
-  left: 50%;
-  transform: translateX(-50%);
   width: 120px;
   height: 120px;
   border-radius: 50%;
   background: radial-gradient(circle, #fff5c0 0%, #FFC84A 55%, #FC8A10 100%);
-  box-shadow: 0 0 60px 20px rgba(252,138,16,0.35), 0 0 120px 50px rgba(252,200,74,0.18);
-  animation: sunFloat 8s ease-in-out infinite;
+  animation: sunArc 18s ease-in-out infinite;
   z-index: 1;
 }
 
@@ -122,9 +118,12 @@ p { color: var(--muted); line-height: 1.8; font-size: 0.9rem; }
   animation: sunSpin 20s linear infinite;
 }
 
-@keyframes sunFloat {
-  0%, 100% { transform: translateX(-50%) translateY(0px); }
-  50%       { transform: translateX(-50%) translateY(-14px); }
+@keyframes sunArc {
+  0%   { left: 5%;  top: 55%; }
+  25%  { left: 28%; top: 8%; }
+  50%  { left: 50%; top: 6%; }
+  75%  { left: 72%; top: 8%; }
+  100% { left: 90%; top: 55%; }
 }
 
 @keyframes sunSpin {
