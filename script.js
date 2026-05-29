@@ -327,8 +327,10 @@ function drawSalaryMap(stateData, countyData, salary) {
 // with a live marker showing where the current salary lands.
 function drawIncomeLadder(currentSalary) {
   const { svg, W, H } = chartFrame("ladderChart", 310);
-  const margin = { top: 20, right: 20, bottom: 45, left: 42 };
+  const margin = { top: 70, right: 45, bottom: 50, left: 42 };
+
   const incomes = [40000, 60000, 80000, 100000, 150000, 200000];
+
   const data = incomes.map(income => {
     const rows = withSalary(COUNTY_DATA, income);
     return {
@@ -337,8 +339,14 @@ function drawIncomeLadder(currentSalary) {
     };
   });
 
-  const x = d3.scaleBand().domain(data.map(d => d.income)).range([margin.left, W - margin.right]).padding(0.28);
-  const y = d3.scaleLinear().domain([0, 1]).nice().range([H - margin.bottom, margin.top]);
+  const x = d3.scaleBand()
+    .domain(data.map(d => d.income))
+    .range([margin.left, W - margin.right])
+    .padding(0.28);
+
+  const y = d3.scaleLinear()
+    .domain([0, 1])
+    .range([H - margin.bottom, margin.top]);
 
   svg.append("g")
     .attr("class", "axis")
@@ -367,52 +375,62 @@ function drawIncomeLadder(currentSalary) {
     .append("text")
     .attr("class", "axis-label")
     .attr("x", d => x(d.income) + x.bandwidth() / 2)
-    .attr("y", d => y(d.share) - 7)
+    .attr("y", d => y(d.share) - 10)
     .attr("text-anchor", "middle")
     .text(d => d3.format(".0%")(d.share));
 
-  // Live salary marker: interpolate where the current salary falls
   if (currentSalary && isFinite(currentSalary)) {
-    // Interpolate the affordable share at the exact current salary
     const currentShare = withSalary(COUNTY_DATA, currentSalary)
       .filter(d => d.salary_rent_burden <= 0.30).length / COUNTY_DATA.length;
 
-    // Place marker at the x midpoint of the nearest band
-    const nearest = incomes.reduce((a, b) => Math.abs(b - currentSalary) < Math.abs(a - currentSalary) ? b : a);
+    const nearest = incomes.reduce((a, b) =>
+      Math.abs(b - currentSalary) < Math.abs(a - currentSalary) ? b : a
+    );
+
     const markerX = x(nearest) + x.bandwidth() / 2;
     const markerY = y(currentShare);
 
-    // Draw a vertical dashed line
     svg.append("line")
-      .attr("x1", markerX).attr("x2", markerX)
-      .attr("y1", margin.top).attr("y2", H - margin.bottom)
+      .attr("x1", markerX)
+      .attr("x2", markerX)
+      .attr("y1", margin.top + 5)
+      .attr("y2", H - margin.bottom)
       .attr("stroke", "#ffb84d")
       .attr("stroke-width", 1.5)
       .attr("stroke-dasharray", "4,3")
       .attr("opacity", 0.75);
 
-    // Draw a dot at the intersection
     svg.append("circle")
       .attr("cx", markerX)
       .attr("cy", markerY)
-      .attr("r", 5)
+      .attr("r", 6)
       .attr("fill", "#ffb84d")
       .attr("stroke", "#050711")
       .attr("stroke-width", 1.5);
 
-    // Label
+    const labelY = Math.max(18, markerY - 55);
+
     svg.append("text")
-      .attr("class", "axis-label")
-      .attr("x", markerX + 7)
-      .attr("y", markerY - 7)
+      .attr("class", "axis-label marker-label")
+      .attr("x", markerX)
+      .attr("y", labelY)
+      .attr("text-anchor", "middle")
       .attr("fill", "#ffb84d")
-      .text(`← ${formatDollar(currentSalary)}: ${d3.format(".0%")(currentShare)} affordable`);
+      .text(`${d3.format(".0%")(currentShare)} affordable`);
+
+    svg.append("text")
+      .attr("class", "axis-label marker-label")
+      .attr("x", markerX)
+      .attr("y", labelY + 14)
+      .attr("text-anchor", "middle")
+      .attr("fill", "#ffb84d")
+      .text(`${formatDollar(currentSalary)}`);
   }
 
-  // Update the insight text in Ch2
   if (currentSalary) {
     const share = withSalary(COUNTY_DATA, currentSalary)
       .filter(d => d.salary_rent_burden <= 0.30).length / COUNTY_DATA.length;
+
     d3.select("#ladderInsight").text(
       `At ${formatDollar(currentSalary)}, ${d3.format(".0%")(share)} of counties are affordable by the 30% rule.`
     );
