@@ -103,7 +103,10 @@ p { color: var(--muted); line-height: 1.8; font-size: 0.9rem; }
   height: 120px;
   border-radius: 50%;
   background: radial-gradient(circle, #fff5c0 0%, #FFC84A 55%, #FC8A10 100%);
-  animation: sunArc 18s ease-in-out infinite;
+  /* anchor at bottom-center, arc rises over the top */
+  left: 50%;
+  top: 50%;
+  animation: sunArc 8s linear infinite;
   z-index: 1;
 }
 
@@ -119,11 +122,8 @@ p { color: var(--muted); line-height: 1.8; font-size: 0.9rem; }
 }
 
 @keyframes sunArc {
-  0%   { left: 5%;  top: 55%; }
-  25%  { left: 28%; top: 8%; }
-  50%  { left: 50%; top: 6%; }
-  75%  { left: 72%; top: 8%; }
-  100% { left: 90%; top: 55%; }
+  0%   { transform: rotate(180deg)  translateX(46vw) rotate(-180deg); }
+  100% { transform: rotate(0deg)    translateX(46vw) rotate(0deg); }
 }
 
 @keyframes sunSpin {
