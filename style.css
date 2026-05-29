@@ -94,20 +94,15 @@ p { color: var(--muted); line-height: 1.8; font-size: 0.9rem; }
     #d8eef8 70%,
     #EDF1F4 100%
   );
+  animation: none;
 }
 
-/* Sun */
+/* Sun — position & color driven by JS animation loop */
 .sun {
   position: absolute;
-  top: 8%;
-  left: 50%;
-  transform: translateX(-50%);
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: radial-gradient(circle, #fff5c0 0%, #FFC84A 55%, #FC8A10 100%);
-  box-shadow: 0 0 60px 20px rgba(252,138,16,0.35), 0 0 120px 50px rgba(252,200,74,0.18);
-  animation: sunFloat 8s ease-in-out infinite;
   z-index: 1;
 }
 
@@ -120,11 +115,6 @@ p { color: var(--muted); line-height: 1.8; font-size: 0.9rem; }
     transparent 10deg 20deg
   );
   animation: sunSpin 20s linear infinite;
-}
-
-@keyframes sunFloat {
-  0%, 100% { transform: translateX(-50%) translateY(0px); }
-  50%       { transform: translateX(-50%) translateY(-14px); }
 }
 
 @keyframes sunSpin {
