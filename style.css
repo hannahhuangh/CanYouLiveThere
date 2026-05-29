@@ -307,7 +307,7 @@ input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   height: 4px;
-  background: linear-gradient(90deg, var(--teal) 0%, var(--accent) 60%, var(--border-strong) 100%);
+  background: linear-gradient(90deg, #c0302a 0%, #d4a017 40%, #facc15 60%, #2e9e5b 100%);
   border-radius: 4px;
   outline: none;
   cursor: pointer;

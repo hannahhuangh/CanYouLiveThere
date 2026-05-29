@@ -13,8 +13,6 @@ let selectedMapState = "ALL";
 let selectedCountyIds = [];
 let isAnimatingSalary = false;
 
-// Tracks whether the user has explicitly chosen a salary (slider, jump buttons, animate).
-// When true, scroll-triggered salary changes are ignored so the user's choice persists.
 let userHasSetSalary = false;
 
 const stateToFips = {
@@ -172,19 +170,14 @@ function withSalary(rows, salary) {
   });
 }
 
-// setSalary: the single source of truth for changing the salary.
-// fromUser=true means the user explicitly set it (slider, jump button, animate).
-// fromUser=false means a scroll trigger is trying to change it.
 function setSalary(value, shouldUpdate = true, fromUser = false) {
-  const salary = Math.max(30000, Math.min(250000, Math.round(value / 5000) * 5000));
+  const salary = Math.max(30000, Math.min(150000, Math.round(value / 5000) * 5000));
 
-  // If scroll is trying to set salary but the user has already set one, ignore it.
   if (!fromUser && userHasSetSalary) return;
-
   if (fromUser) userHasSetSalary = true;
 
   document.getElementById("salarySlider").value = salary;
-  d3.select("#salaryValue").text(formatDollar(salary));
+  d3.select("#salaryValue").text(salary >= 150000 ? "$150,000+" : formatDollar(salary));
   if (shouldUpdate) updateAll(salary);
 }
 
@@ -251,6 +244,7 @@ function drawSalaryMap(stateData, countyData, salary) {
             <strong>${row.state}</strong><br>
             Click to zoom into counties<br>
             Selected income: ${formatDollar(salary)}<br>
+            Monthly income: ${formatDollar(salary / 12)}/mo<br>
             Avg monthly rent: ${formatDollar(row.avg_monthly_rent)}<br>
             Rent burden: ${formatPercent(row.salary_rent_burden_percent)}<br>
             Category: ${row.salary_category}<br>
@@ -278,15 +272,9 @@ function drawSalaryMap(stateData, countyData, salary) {
       const fips = String(d.id).padStart(5, "0");
       const row = countyByFips.get(fips);
       if (!row) return;
-
-      // Update comparison selection — keep up to 2, most recent first
       selectedCountyIds = [fips, ...selectedCountyIds.filter(id => id !== fips)].slice(0, 2);
       syncComparisonDropdowns();
-
-      // Also update the dream dropdown to this county so Ch4 reacts immediately
       d3.select("#dreamSelect").property("value", fips);
-
-      // Redraw comparison and dream without resetting salary
       drawComparison(salary);
       drawDreamLocation(salary);
     })
@@ -302,6 +290,7 @@ function drawSalaryMap(stateData, countyData, salary) {
           <strong>${row.county}, ${row.state}</strong><br>
           Click to add to comparison & set dream county<br>
           Selected income: ${formatDollar(salary)}<br>
+          Monthly income: ${formatDollar(salary / 12)}/mo<br>
           Avg monthly rent: ${formatDollar(row.avg_monthly_rent)}<br>
           Rent burden: ${formatPercent(row.salary_rent_burden_percent)}<br>
           Category: ${row.salary_category}<br>
@@ -323,13 +312,11 @@ function drawSalaryMap(stateData, countyData, salary) {
   document.getElementById("mapModeLabel").textContent = `Viewing: ${selectedMapState} counties`;
 }
 
-// Income ladder: static chart showing % affordable at fixed incomes,
-// with a live marker showing where the current salary lands.
 function drawIncomeLadder(currentSalary) {
   const { svg, W, H } = chartFrame("ladderChart", 310);
   const margin = { top: 70, right: 45, bottom: 50, left: 42 };
 
-  const incomes = [40000, 60000, 80000, 100000, 150000, 200000];
+  const incomes = [40000, 60000, 80000, 100000, 150000];
 
   const data = incomes.map(income => {
     const rows = withSalary(COUNTY_DATA, income);
@@ -391,46 +378,33 @@ function drawIncomeLadder(currentSalary) {
     const markerY = y(currentShare);
 
     svg.append("line")
-      .attr("x1", markerX)
-      .attr("x2", markerX)
-      .attr("y1", margin.top + 5)
-      .attr("y2", H - margin.bottom)
-      .attr("stroke", "#ffb84d")
-      .attr("stroke-width", 1.5)
-      .attr("stroke-dasharray", "4,3")
-      .attr("opacity", 0.75);
+      .attr("x1", markerX).attr("x2", markerX)
+      .attr("y1", margin.top + 5).attr("y2", H - margin.bottom)
+      .attr("stroke", "#ffb84d").attr("stroke-width", 1.5)
+      .attr("stroke-dasharray", "4,3").attr("opacity", 0.75);
 
     svg.append("circle")
-      .attr("cx", markerX)
-      .attr("cy", markerY)
-      .attr("r", 6)
-      .attr("fill", "#ffb84d")
-      .attr("stroke", "#050711")
-      .attr("stroke-width", 1.5);
+      .attr("cx", markerX).attr("cy", markerY).attr("r", 6)
+      .attr("fill", "#ffb84d").attr("stroke", "#050711").attr("stroke-width", 1.5);
 
     const labelY = Math.max(18, markerY - 55);
 
     svg.append("text")
       .attr("class", "axis-label marker-label")
-      .attr("x", markerX)
-      .attr("y", labelY)
-      .attr("text-anchor", "middle")
-      .attr("fill", "#ffb84d")
+      .attr("x", markerX).attr("y", labelY)
+      .attr("text-anchor", "middle").attr("fill", "#ffb84d")
       .text(`${d3.format(".0%")(currentShare)} affordable`);
 
     svg.append("text")
       .attr("class", "axis-label marker-label")
-      .attr("x", markerX)
-      .attr("y", labelY + 14)
-      .attr("text-anchor", "middle")
-      .attr("fill", "#ffb84d")
+      .attr("x", markerX).attr("y", labelY + 14)
+      .attr("text-anchor", "middle").attr("fill", "#ffb84d")
       .text(`${formatDollar(currentSalary)}`);
   }
 
   if (currentSalary) {
     const share = withSalary(COUNTY_DATA, currentSalary)
       .filter(d => d.salary_rent_burden <= 0.30).length / COUNTY_DATA.length;
-
     d3.select("#ladderInsight").text(
       `At ${formatDollar(currentSalary)}, ${d3.format(".0%")(share)} of counties are affordable by the 30% rule.`
     );
@@ -447,22 +421,24 @@ function populateDropdowns() {
   stateSelect.html("");
   stateSelect.append("option").attr("value", "ALL").text("All states");
   stateSelect.selectAll("option.state-option")
-    .data(states)
-    .enter()
-    .append("option")
-    .attr("class", "state-option")
-    .attr("value", d => d)
-    .text(d => d);
+    .data(states).enter().append("option")
+    .attr("class", "state-option").attr("value", d => d).text(d => d);
+
+  const prefState = d3.select("#prefState");
+  if (!prefState.empty()) {
+    prefState.html("");
+    prefState.append("option").attr("value", "ALL").text("All states");
+    prefState.selectAll("option.pref-state-option")
+      .data(states).enter().append("option")
+      .attr("class", "pref-state-option").attr("value", d => d).text(d => d);
+  }
 
   const countyOptions = COUNTY_DATA.slice().sort((a, b) => d3.ascending(countyLabel(a), countyLabel(b)));
-  ["#compareA", "#compareB", "#dreamSelect"].forEach(id => {
+  ["#compareA", "#compareB", "#dreamSelect", "#jobCountyA", "#jobCountyB"].forEach(id => {
     const select = d3.select(id).html("");
     select.selectAll("option")
-      .data(countyOptions)
-      .enter()
-      .append("option")
-      .attr("value", d => d.fips)
-      .text(d => countyLabel(d));
+      .data(countyOptions).enter().append("option")
+      .attr("value", d => d.fips).text(d => countyLabel(d));
   });
 
   const caSanDiego = COUNTY_DATA.find(d => d.state === "CA" && normalizeCountyName(d.county).includes("san diego"));
@@ -471,6 +447,16 @@ function populateDropdowns() {
   if (selectedCountyIds.length < 2) selectedCountyIds = countyOptions.slice(0, 2).map(d => d.fips);
   syncComparisonDropdowns();
   d3.select("#dreamSelect").property("value", selectedCountyIds[0]);
+
+  if (selectedCountyIds[0]) d3.select("#jobCountyA").property("value", selectedCountyIds[0]);
+  if (selectedCountyIds[1]) d3.select("#jobCountyB").property("value", selectedCountyIds[1]);
+
+  const salaryOptions = Array.from({ length: (150000 - 30000) / 5000 + 1 }, (_, i) => 30000 + i * 5000);
+  ["#jobSalaryA", "#jobSalaryB"].forEach((id, idx) => {
+    const sel = d3.select(id).html("");
+    salaryOptions.forEach(s => sel.append("option").attr("value", s).text(formatDollar(s)));
+    d3.select(id).property("value", idx === 0 ? 75000 : 60000);
+  });
 }
 
 function syncComparisonDropdowns() {
@@ -484,11 +470,7 @@ function drawComparison(salary) {
   const salaryRows = withSalary(rows, salary);
 
   const cards = d3.select("#comparisonCards").html("");
-  cards.selectAll("div")
-    .data(salaryRows)
-    .enter()
-    .append("div")
-    .attr("class", "place-card")
+  cards.selectAll("div").data(salaryRows).enter().append("div").attr("class", "place-card")
     .html(d => `
       <h4>${countyLabel(d)}</h4>
       <p>Rent: ${formatDollar(d.avg_monthly_rent)} / month</p>
@@ -504,28 +486,106 @@ function drawComparison(salary) {
   const yMax = Math.max(60, d3.max(salaryRows, d => d.salary_rent_burden_percent) * 1.2);
   const y = d3.scaleLinear().domain([0, yMax]).nice().range([H - margin.bottom, margin.top]);
 
-  svg.append("g").attr("class", "axis").attr("transform", `translate(0,${H - margin.bottom})`).call(d3.axisBottom(x)).selectAll("text").attr("transform", "rotate(-12)").style("text-anchor", "end");
-  svg.append("g").attr("class", "axis").attr("transform", `translate(${margin.left},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(d => d + "%"));
+  svg.append("g").attr("class", "axis").attr("transform", `translate(0,${H - margin.bottom})`)
+    .call(d3.axisBottom(x)).selectAll("text").attr("transform", "rotate(-12)").style("text-anchor", "end");
+  svg.append("g").attr("class", "axis").attr("transform", `translate(${margin.left},0)`)
+    .call(d3.axisLeft(y).ticks(5).tickFormat(d => d + "%"));
 
   svg.append("line")
     .attr("x1", margin.left).attr("x2", W - margin.right)
     .attr("y1", y(30)).attr("y2", y(30))
     .attr("stroke", "#ffb84d").attr("stroke-dasharray", "5,4");
-
-  svg.append("text")
-    .attr("class", "axis-label")
+  svg.append("text").attr("class", "axis-label")
     .attr("x", W - margin.right).attr("y", y(30) - 6)
     .attr("text-anchor", "end").text("30% affordable line");
 
-  svg.selectAll("rect")
-    .data(salaryRows)
-    .enter()
-    .append("rect")
+  svg.selectAll("rect").data(salaryRows).enter().append("rect")
     .attr("x", d => x(countyLabel(d)))
     .attr("y", d => y(d.salary_rent_burden_percent))
     .attr("width", x.bandwidth())
     .attr("height", d => y(0) - y(d.salary_rent_burden_percent))
     .attr("fill", d => burdenColor(d.salary_rent_burden))
+    .attr("opacity", 0.9);
+}
+
+function drawJobComparison() {
+  const countyAId = document.getElementById("jobCountyA").value;
+  const countyBId = document.getElementById("jobCountyB").value;
+  const salaryA = Math.max(0, +document.getElementById("jobSalaryA").value || 0);
+  const salaryB = Math.max(0, +document.getElementById("jobSalaryB").value || 0);
+
+  const rowA = COUNTY_DATA.find(d => d.fips === countyAId);
+  const rowB = COUNTY_DATA.find(d => d.fips === countyBId);
+  if (!rowA || !rowB) return;
+
+  const enrich = (row, salary) => {
+    const burden = salary > 0 ? row.avg_monthly_rent / (salary / 12) : Infinity;
+    return {
+      ...row,
+      job_salary: salary,
+      salary_rent_burden: burden,
+      salary_rent_burden_percent: burden * 100,
+      salary_category: categoryFromBurden(burden)
+    };
+  };
+
+  const salaryRows = [enrich(rowA, salaryA), enrich(rowB, salaryB)];
+  const labels = [
+    `${countyLabel(rowA)}\n($${(salaryA/1000).toFixed(0)}k)`,
+    `${countyLabel(rowB)}\n($${(salaryB/1000).toFixed(0)}k)`
+  ];
+
+  const cards = d3.select("#jobComparisonCards").html("");
+  cards.selectAll("div").data(salaryRows).enter().append("div").attr("class", "place-card")
+    .html((d, i) => `
+      <h4>${countyLabel(d)}</h4>
+      <p>Salary: ${formatDollar(d.job_salary)}/yr</p>
+      <p>Rent: ${formatDollar(d.avg_monthly_rent)} / month</p>
+      <p>Rent burden: ${formatPercent(d.salary_rent_burden_percent)}</p>
+      <p>Required income: ${formatDollar(d.required_income)}</p>
+      <p>Category: ${d.salary_category}</p>
+    `);
+
+  const { svg, W, H } = chartFrame("jobComparisonChart", 260);
+  const margin = { top: 24, right: 20, bottom: 65, left: 48 };
+  const x = d3.scaleBand().domain(labels).range([margin.left, W - margin.right]).padding(0.35);
+  const yMax = Math.max(60, d3.max(salaryRows, d => isFinite(d.salary_rent_burden_percent) ? d.salary_rent_burden_percent : 0) * 1.2);
+  const y = d3.scaleLinear().domain([0, yMax]).nice().range([H - margin.bottom, margin.top]);
+
+  svg.append("g").attr("class", "axis").attr("transform", `translate(0,${H - margin.bottom})`)
+    .call(d3.axisBottom(x).tickFormat(d => d.split("\n")[0]))
+    .selectAll("text").attr("transform", "rotate(-12)").style("text-anchor", "end");
+
+  labels.forEach((lbl) => {
+    const parts = lbl.split("\n");
+    const xPos = x(lbl) + x.bandwidth() / 2;
+    svg.append("text").attr("class", "axis-label")
+      .attr("x", xPos).attr("y", H - margin.bottom + 38)
+      .attr("text-anchor", "middle")
+      .style("font-size", "9px").style("fill", "var(--teal2)")
+      .text(parts[1]);
+  });
+
+  svg.append("g").attr("class", "axis").attr("transform", `translate(${margin.left},0)`)
+    .call(d3.axisLeft(y).ticks(5).tickFormat(d => d + "%"));
+
+  svg.append("line")
+    .attr("x1", margin.left).attr("x2", W - margin.right)
+    .attr("y1", y(30)).attr("y2", y(30))
+    .attr("stroke", "#ffb84d").attr("stroke-dasharray", "5,4");
+  svg.append("text").attr("class", "axis-label")
+    .attr("x", W - margin.right).attr("y", y(30) - 6)
+    .attr("text-anchor", "end").text("30% affordable line");
+
+  svg.selectAll("rect").data(salaryRows).enter().append("rect")
+    .attr("x", (d, i) => x(labels[i]))
+    .attr("y", d => y(Math.min(isFinite(d.salary_rent_burden_percent) ? d.salary_rent_burden_percent : yMax, yMax)))
+    .attr("width", x.bandwidth())
+    .attr("height", d => {
+      const val = isFinite(d.salary_rent_burden_percent) ? Math.min(d.salary_rent_burden_percent, yMax) : yMax;
+      return y(0) - y(val);
+    })
+    .attr("fill", d => isFinite(d.salary_rent_burden) ? burdenColor(d.salary_rent_burden) : "#c0302a")
     .attr("opacity", 0.9);
 }
 
@@ -550,10 +610,7 @@ function drawDreamLocation(salary) {
 
   svg.append("g").attr("class", "axis").attr("transform", `translate(0,${H - margin.bottom})`).call(d3.axisBottom(x));
   svg.append("g").attr("class", "axis").attr("transform", `translate(${margin.left},0)`).call(d3.axisLeft(y).ticks(4).tickFormat(formatDollar));
-  svg.selectAll("rect")
-    .data(data)
-    .enter()
-    .append("rect")
+  svg.selectAll("rect").data(data).enter().append("rect")
     .attr("x", d => x(d.label))
     .attr("y", d => y(d.value))
     .attr("width", x.bandwidth())
@@ -571,11 +628,14 @@ function updateRecommendations(salary) {
   const urban   = document.getElementById("prefUrban").checked;
   const lowRent = document.getElementById("prefLowRent") && document.getElementById("prefLowRent").checked;
   const buffer  = document.getElementById("prefBuffer") && document.getElementById("prefBuffer").checked;
+  const prefStateEl = document.getElementById("prefState");
+  const stateFilter = prefStateEl ? prefStateEl.value : "ALL";
 
   const medianZips = d3.median(COUNTY_DATA, r => r.zip_count);
 
   let rows = withSalary(COUNTY_DATA, salary)
     .filter(d => d.salary_rent_burden <= 0.30)
+    .filter(d => stateFilter === "ALL" || d.state === stateFilter)
     .filter(d => !warm    || warmStates.has(d.state))
     .filter(d => !coastal || coastalStates.has(d.state))
     .filter(d => !midwest || midwestStates.has(d.state))
@@ -593,11 +653,7 @@ function updateRecommendations(salary) {
     return;
   }
 
-  list.selectAll("div")
-    .data(rows)
-    .enter()
-    .append("div")
-    .attr("class", "recommendation-item")
+  list.selectAll("div").data(rows).enter().append("div").attr("class", "recommendation-item")
     .html((d, i) => `
       <h4>${i + 1}. ${countyLabel(d)}</h4>
       <p>Burden: <strong style="color:var(--teal2)">${formatPercent(d.salary_rent_burden_percent)}</strong> &nbsp;·&nbsp; Rent: ${formatDollar(d.avg_monthly_rent)}/mo</p>
@@ -623,68 +679,45 @@ function drawRecMap(matchedRows) {
   projection.fitSize([W, H], { type: "FeatureCollection", features: US_STATES });
   const path = d3.geoPath(projection);
 
-  // Draw all states as base layer
-  svg.append("g").selectAll("path")
-    .data(US_STATES)
-    .enter().append("path")
-    .attr("d", path)
-    .attr("fill", "#d8e6ee")
-    .attr("stroke", "white")
-    .attr("stroke-width", 0.5);
+  svg.append("g").selectAll("path").data(US_STATES).enter().append("path")
+    .attr("d", path).attr("fill", "#d8e6ee").attr("stroke", "white").attr("stroke-width", 0.5);
 
-  // Draw matched counties highlighted
   svg.append("g").selectAll("path")
     .data(US_COUNTIES.filter(d => matchedFips.has(String(d.id).padStart(5, "0"))))
     .enter().append("path")
-    .attr("d", path)
-    .attr("fill", "#FC8A10")
-    .attr("stroke", "white")
-    .attr("stroke-width", 0.8)
-    .attr("opacity", 0.9)
+    .attr("d", path).attr("fill", "#FC8A10").attr("stroke", "white").attr("stroke-width", 0.8).attr("opacity", 0.9)
     .on("mousemove", (event, d) => {
       const fips = String(d.id).padStart(5, "0");
       const row = matchedRows.find(r => r.fips === fips);
       if (!row) return;
-      tooltip
-        .style("opacity", 1)
-        .style("left", event.clientX + 14 + "px")
-        .style("top", event.clientY + 14 + "px")
+      tooltip.style("opacity", 1)
+        .style("left", event.clientX + 14 + "px").style("top", event.clientY + 14 + "px")
         .html(`<strong>${countyLabel(row)}</strong>Rent: ${formatDollar(row.avg_monthly_rent)}/mo<br>Burden: ${formatPercent(row.salary_rent_burden_percent)}`);
     })
     .on("mouseleave", () => tooltip.style("opacity", 0));
 
-  // Rank labels on matched counties
   matchedRows.forEach((row, i) => {
     const feature = US_COUNTIES.find(d => String(d.id).padStart(5, "0") === row.fips);
     if (!feature) return;
     const centroid = path.centroid(feature);
     if (!centroid || !isFinite(centroid[0])) return;
-    svg.append("circle")
-      .attr("cx", centroid[0]).attr("cy", centroid[1])
-      .attr("r", 8)
-      .attr("fill", "#FC8A10")
-      .attr("stroke", "white")
-      .attr("stroke-width", 1.5);
-    svg.append("text")
-      .attr("x", centroid[0]).attr("y", centroid[1] + 4)
-      .attr("text-anchor", "middle")
-      .attr("fill", "white")
-      .attr("font-size", 9)
-      .attr("font-weight", "700")
+    svg.append("circle").attr("cx", centroid[0]).attr("cy", centroid[1]).attr("r", 8)
+      .attr("fill", "#FC8A10").attr("stroke", "white").attr("stroke-width", 1.5);
+    svg.append("text").attr("x", centroid[0]).attr("y", centroid[1] + 4)
+      .attr("text-anchor", "middle").attr("fill", "white").attr("font-size", 9).attr("font-weight", "700")
       .text(i + 1);
   });
 }
 
-// Central update: everything reads from the single salary value.
 function updateAll(salary) {
   selectedMapState = document.getElementById("stateSelect").value;
   const salaryStateData = withSalary(STATE_DATA, salary);
   const salaryCountyData = withSalary(COUNTY_DATA, salary);
 
-  d3.select("#salaryValue").text(formatDollar(salary));
+  d3.select("#salaryValue").text(salary >= 150000 ? "$150,000+" : formatDollar(salary));
   updateStats(salaryStateData, salaryCountyData, salary);
   drawSalaryMap(salaryStateData, salaryCountyData, salary);
-  drawIncomeLadder(salary);   // re-draw with current salary marker
+  drawIncomeLadder(salary);
   drawComparison(salary);
   drawDreamLocation(salary);
   updateRecommendations(salary);
@@ -695,7 +728,6 @@ function setupScrollStory() {
     entries.forEach(entry => {
       if (!entry.isIntersecting) return;
       const salary = +entry.target.dataset.salary;
-      // fromUser=false — scroll never overrides an explicit user choice
       if (salary && !isAnimatingSalary) setSalary(salary, true, false);
     });
   }, { threshold: 0.55 });
@@ -706,13 +738,13 @@ function setupScrollStory() {
 async function animateSalary() {
   if (isAnimatingSalary) return;
   isAnimatingSalary = true;
-  userHasSetSalary = true;   // animation counts as an explicit user action
+  userHasSetSalary = true;
   const button = document.getElementById("playSalaryButton");
   button.textContent = "Animating...";
-  const steps = [40000, 60000, 80000, 100000, 125000, 150000];
+  const steps = Array.from({ length: (150000 - 30000) / 5000 + 1 }, (_, i) => 30000 + i * 5000);
   for (const salary of steps) {
     setSalary(salary, true, true);
-    await new Promise(resolve => setTimeout(resolve, 650));
+    await new Promise(resolve => setTimeout(resolve, 400));
   }
   button.textContent = "Animate raise";
   isAnimatingSalary = false;
@@ -740,11 +772,9 @@ Promise.all([
 
   updateAll(+slider.value);
   setupScrollStory();
+  drawJobComparison();
 
-  // Slider: explicit user action
-  slider.addEventListener("input", function() {
-    setSalary(+this.value, true, true);
-  });
+  slider.addEventListener("input", function() { setSalary(+this.value, true, true); });
 
   stateSelect.addEventListener("change", function() {
     selectedMapState = this.value;
@@ -759,12 +789,10 @@ Promise.all([
 
   document.getElementById("playSalaryButton").addEventListener("click", animateSalary);
 
-  // Salary jump buttons: explicit user action — sets lock
   document.querySelectorAll(".salary-jump").forEach(button => {
     button.addEventListener("click", () => setSalary(+button.dataset.salary, true, true));
   });
 
-  // Comparison or dream dropdown changes: propagate to all sections
   ["compareA", "compareB"].forEach(id => {
     document.getElementById(id).addEventListener("change", () => {
       selectedCountyIds = [
@@ -775,7 +803,6 @@ Promise.all([
     });
   });
 
-  // Dream select change: also update comparison slot A so map and Ch3 stay in sync
   document.getElementById("dreamSelect").addEventListener("change", () => {
     const fips = document.getElementById("dreamSelect").value;
     selectedCountyIds = [fips, selectedCountyIds[1] || fips];
@@ -787,6 +814,16 @@ Promise.all([
   ["prefWarm", "prefCoastal", "prefUrban", "prefMidwest", "prefLowRent", "prefBuffer"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener("change", () => updateRecommendations(+slider.value));
+  });
+
+  const prefStateEl = document.getElementById("prefState");
+  if (prefStateEl) prefStateEl.addEventListener("change", () => updateRecommendations(+slider.value));
+
+  ["jobCountyA", "jobCountyB"].forEach(id => {
+    document.getElementById(id).addEventListener("change", drawJobComparison);
+  });
+  ["jobSalaryA", "jobSalaryB"].forEach(id => {
+    document.getElementById(id).addEventListener("change", drawJobComparison);
   });
 
   window.addEventListener("resize", () => updateAll(+slider.value));
