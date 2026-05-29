@@ -666,3 +666,7 @@ footer {
   .stat-grid, .comparison-cards, .ch5-layout { grid-template-columns: 1fr; }
   .sticky-controls { margin: 0 1rem 1rem; }
 }
+
+.writeup-section { background: var(--card); border-bottom: 1px solid var(--border); }
+.writeup-inner   { max-width: 820px; margin: 0 auto; padding: 4rem 3rem; }
+.writeup-inner p { margin-bottom: 1.1rem; font-size: 0.95rem; line-height: 1.85; }
