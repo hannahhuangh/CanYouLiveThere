@@ -815,3 +815,28 @@ main {
     margin: 0 auto 1rem;
   }
 }
+
+
+/* prettier hero neighborhood + background city */
+.cute-house {
+  filter: drop-shadow(0 7px 10px rgba(13, 28, 36, 0.14));
+  transform-origin: center bottom;
+}
+
+.cute-house:hover {
+  transform: translateY(-3px);
+}
+
+.cute-house rect,
+.cute-house polygon,
+.city-backdrop rect {
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.city-backdrop {
+  filter: drop-shadow(0 4px 8px rgba(13, 28, 36, 0.06));
+}
+
+.neighborhood {
+  transform-origin: center bottom;
+}

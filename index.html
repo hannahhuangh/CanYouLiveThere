@@ -17,132 +17,323 @@
   <!-- ── Animated hero ────────────────────────────────── -->
   <header class="hero">
     <div class="hero-scene" aria-hidden="true">
-      <!-- Sun -->
       <div class="sun">
         <div class="sun-rays"></div>
       </div>
-      <!-- Clouds -->
+
       <div class="cloud cloud-1"></div>
       <div class="cloud cloud-2"></div>
       <div class="cloud cloud-3"></div>
+
       <!-- Cityscape SVG -->
       <svg class="cityscape" viewBox="0 0 1440 300" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
-        <!-- Back row buildings -->
-        <rect x="0"   y="180" width="60"  height="120" fill="#17B3D9" opacity="0.45"/>
-        <rect x="55"  y="140" width="45"  height="160" fill="#FC8A10" opacity="0.4"/>
-        <rect x="95"  y="160" width="70"  height="140" fill="#E2C1DE" opacity="0.5"/>
-        <rect x="160" y="120" width="50"  height="180" fill="#17B3D9" opacity="0.4"/>
-        <rect x="205" y="155" width="80"  height="145" fill="#FC8A10" opacity="0.35"/>
-        <rect x="280" y="110" width="55"  height="190" fill="#E2C1DE" opacity="0.45"/>
-        <rect x="330" y="145" width="65"  height="155" fill="#17B3D9" opacity="0.38"/>
-        <rect x="390" y="130" width="45"  height="170" fill="#FC8A10" opacity="0.4"/>
-        <rect x="430" y="165" width="90"  height="135" fill="#E2C1DE" opacity="0.42"/>
-        <rect x="515" y="125" width="55"  height="175" fill="#17B3D9" opacity="0.4"/>
-        <rect x="565" y="150" width="70"  height="150" fill="#FC8A10" opacity="0.38"/>
-        <rect x="630" y="100" width="60"  height="200" fill="#E2C1DE" opacity="0.5"/>
-        <rect x="685" y="140" width="50"  height="160" fill="#17B3D9" opacity="0.42"/>
-        <rect x="730" y="120" width="80"  height="180" fill="#FC8A10" opacity="0.4"/>
-        <rect x="805" y="155" width="55"  height="145" fill="#E2C1DE" opacity="0.45"/>
-        <rect x="855" y="115" width="65"  height="185" fill="#17B3D9" opacity="0.4"/>
-        <rect x="915" y="145" width="75"  height="155" fill="#FC8A10" opacity="0.38"/>
-        <rect x="985" y="130" width="50"  height="170" fill="#E2C1DE" opacity="0.5"/>
-        <rect x="1030" y="160" width="70" height="140" fill="#17B3D9" opacity="0.4"/>
-        <rect x="1095" y="120" width="55" height="180" fill="#FC8A10" opacity="0.42"/>
-        <rect x="1145" y="145" width="80" height="155" fill="#E2C1DE" opacity="0.45"/>
-        <rect x="1220" y="110" width="60" height="190" fill="#17B3D9" opacity="0.4"/>
-        <rect x="1275" y="150" width="50" height="150" fill="#FC8A10" opacity="0.38"/>
-        <rect x="1320" y="130" width="75" height="170" fill="#E2C1DE" opacity="0.48"/>
-        <rect x="1390" y="165" width="55" height="135" fill="#17B3D9" opacity="0.4"/>
 
-        <!-- Front row houses -->
-        <!-- House: body + roof as polygon -->
-        <g class="house" transform="translate(30,210)">
-          <rect x="0" y="30" width="70" height="60" fill="#FC8A10"/>
-          <polygon points="35,0 70,30 0,30" fill="#c96800"/>
-          <rect x="25" y="50" width="20" height="40" fill="#EDF1F4" opacity="0.6"/>
-          <rect x="5"  y="45" width="15" height="15" fill="#EDF1F4" opacity="0.5"/>
-        </g>
-        <g class="house" transform="translate(130,225)">
-          <rect x="0" y="25" width="55" height="50" fill="#E2C1DE"/>
-          <polygon points="27,0 55,25 0,25" fill="#b8a0ba"/>
-          <rect x="18" y="42" width="18" height="33" fill="#EDF1F4" opacity="0.6"/>
-        </g>
-        <g class="house" transform="translate(220,200)">
-          <rect x="0" y="35" width="85" height="70" fill="#17B3D9" opacity="0.85"/>
-          <polygon points="42,0 85,35 0,35" fill="#0e88a8"/>
-          <rect x="30" y="55" width="25" height="50" fill="#EDF1F4" opacity="0.65"/>
-          <rect x="8"  y="50" width="18" height="18" fill="#EDF1F4" opacity="0.5"/>
-          <rect x="59" y="50" width="18" height="18" fill="#EDF1F4" opacity="0.5"/>
-        </g>
-        <g class="house" transform="translate(340,218)">
-          <rect x="0" y="28" width="60" height="55" fill="#FC8A10"/>
-          <polygon points="30,0 60,28 0,28" fill="#c96800"/>
-          <rect x="20" y="44" width="20" height="38" fill="#EDF1F4" opacity="0.6"/>
-        </g>
-        <g class="house" transform="translate(435,210)">
-          <rect x="0" y="30" width="75" height="60" fill="#E2C1DE"/>
-          <polygon points="37,0 75,30 0,30" fill="#b8a0ba"/>
-          <rect x="27" y="48" width="22" height="42" fill="#EDF1F4" opacity="0.6"/>
-          <rect x="6"  y="45" width="16" height="16" fill="#EDF1F4" opacity="0.5"/>
-        </g>
-        <g class="house" transform="translate(545,205)">
-          <rect x="0" y="32" width="80" height="65" fill="#FC8A10"/>
-          <polygon points="40,0 80,32 0,32" fill="#c96800"/>
-          <rect x="28" y="50" width="24" height="47" fill="#EDF1F4" opacity="0.65"/>
-          <rect x="8"  y="48" width="16" height="16" fill="#EDF1F4" opacity="0.5"/>
-          <rect x="56" y="48" width="16" height="16" fill="#EDF1F4" opacity="0.5"/>
-        </g>
-        <g class="house" transform="translate(660,215)">
-          <rect x="0" y="28" width="65" height="57" fill="#17B3D9" opacity="0.85"/>
-          <polygon points="32,0 65,28 0,28" fill="#0e88a8"/>
-          <rect x="22" y="44" width="21" height="40" fill="#EDF1F4" opacity="0.6"/>
-        </g>
-        <g class="house" transform="translate(760,208)">
-          <rect x="0" y="30" width="72" height="62" fill="#E2C1DE"/>
-          <polygon points="36,0 72,30 0,30" fill="#b8a0ba"/>
-          <rect x="26" y="48" width="20" height="44" fill="#EDF1F4" opacity="0.6"/>
-          <rect x="5"  y="46" width="16" height="16" fill="#EDF1F4" opacity="0.5"/>
-        </g>
-        <g class="house" transform="translate(868,212)">
-          <rect x="0" y="29" width="68" height="59" fill="#FC8A10"/>
-          <polygon points="34,0 68,29 0,29" fill="#c96800"/>
-          <rect x="24" y="46" width="20" height="42" fill="#EDF1F4" opacity="0.6"/>
-        </g>
-        <g class="house" transform="translate(970,202)">
-          <rect x="0" y="33" width="82" height="68" fill="#17B3D9" opacity="0.85"/>
-          <polygon points="41,0 82,33 0,33" fill="#0e88a8"/>
-          <rect x="29" y="52" width="24" height="49" fill="#EDF1F4" opacity="0.65"/>
-          <rect x="8"  y="50" width="17" height="17" fill="#EDF1F4" opacity="0.5"/>
-          <rect x="57" y="50" width="17" height="17" fill="#EDF1F4" opacity="0.5"/>
-        </g>
-        <g class="house" transform="translate(1085,218)">
-          <rect x="0" y="27" width="58" height="55" fill="#E2C1DE"/>
-          <polygon points="29,0 58,27 0,27" fill="#b8a0ba"/>
-          <rect x="19" y="43" width="20" height="38" fill="#EDF1F4" opacity="0.6"/>
-        </g>
-        <g class="house" transform="translate(1178,206)">
-          <rect x="0" y="31" width="76" height="63" fill="#FC8A10"/>
-          <polygon points="38,0 76,31 0,31" fill="#c96800"/>
-          <rect x="27" y="49" width="22" height="45" fill="#EDF1F4" opacity="0.6"/>
-          <rect x="6"  y="47" width="16" height="16" fill="#EDF1F4" opacity="0.5"/>
-        </g>
-        <g class="house" transform="translate(1290,210)">
-          <rect x="0" y="30" width="70" height="60" fill="#17B3D9" opacity="0.85"/>
-          <polygon points="35,0 70,30 0,30" fill="#0e88a8"/>
-          <rect x="25" y="48" width="20" height="42" fill="#EDF1F4" opacity="0.6"/>
-        </g>
-        <g class="house" transform="translate(1390,215)">
-          <rect x="0" y="28" width="60" height="57" fill="#E2C1DE"/>
-          <polygon points="30,0 60,28 0,28" fill="#b8a0ba"/>
-          <rect x="20" y="44" width="20" height="40" fill="#EDF1F4" opacity="0.6"/>
+        <!-- BACKGROUND CITY BUILDINGS -->
+        <g class="city-backdrop" aria-hidden="true">
+          <path d="M0 235 L0 300 L1440 300 L1440 228
+                   C1370 222, 1310 230, 1245 226
+                   C1170 221, 1115 231, 1055 225
+                   C990 219, 930 229, 860 224
+                   C790 219, 725 231, 660 225
+                   C590 219, 530 229, 470 224
+                   C400 218, 335 231, 270 225
+                   C205 219, 140 229, 70 224
+                   C35 222, 15 231, 0 235 Z"
+                fill="#dce7ec" opacity="0.58"/>
+
+          <g opacity="0.96">
+            <g transform="translate(10,132)">
+              <rect x="0" y="38" width="62" height="130" rx="4" fill="#9db0bc"/>
+              <rect x="10" y="0" width="42" height="38" rx="4" fill="#aebdc7"/>
+              <g fill="#eaf0f3" opacity="0.75">
+                <rect x="11" y="50" width="8" height="10"/><rect x="27" y="50" width="8" height="10"/><rect x="43" y="50" width="8" height="10"/>
+                <rect x="11" y="67" width="8" height="10"/><rect x="27" y="67" width="8" height="10"/><rect x="43" y="67" width="8" height="10"/>
+                <rect x="11" y="84" width="8" height="10"/><rect x="27" y="84" width="8" height="10"/><rect x="43" y="84" width="8" height="10"/>
+                <rect x="11" y="101" width="8" height="10"/><rect x="27" y="101" width="8" height="10"/><rect x="43" y="101" width="8" height="10"/>
+              </g>
+            </g>
+
+            <g transform="translate(90,116)">
+              <rect x="0" y="32" width="80" height="150" rx="4" fill="#c2b8b0"/>
+              <rect x="10" y="0" width="58" height="32" rx="4" fill="#d1c6bd"/>
+              <g fill="#fff7ef" opacity="0.72">
+                <rect x="12" y="46" width="10" height="12"/><rect x="30" y="46" width="10" height="12"/><rect x="48" y="46" width="10" height="12"/>
+                <rect x="12" y="66" width="10" height="12"/><rect x="30" y="66" width="10" height="12"/><rect x="48" y="66" width="10" height="12"/>
+                <rect x="12" y="86" width="10" height="12"/><rect x="30" y="86" width="10" height="12"/><rect x="48" y="86" width="10" height="12"/>
+                <rect x="12" y="106" width="10" height="12"/><rect x="30" y="106" width="10" height="12"/><rect x="48" y="106" width="10" height="12"/>
+              </g>
+            </g>
+
+            <g transform="translate(190,140)">
+              <rect x="0" y="26" width="54" height="122" rx="4" fill="#a6b6a1"/>
+              <rect x="9" y="0" width="35" height="26" rx="4" fill="#b8c6b4"/>
+              <g fill="#eef4ea" opacity="0.72">
+                <rect x="10" y="38" width="7" height="10"/><rect x="23" y="38" width="7" height="10"/><rect x="36" y="38" width="7" height="10"/>
+                <rect x="10" y="55" width="7" height="10"/><rect x="23" y="55" width="7" height="10"/><rect x="36" y="55" width="7" height="10"/>
+                <rect x="10" y="72" width="7" height="10"/><rect x="23" y="72" width="7" height="10"/><rect x="36" y="72" width="7" height="10"/>
+              </g>
+            </g>
+
+            <g transform="translate(260,100)">
+              <rect x="0" y="42" width="72" height="162" rx="4" fill="#8fa7b5"/>
+              <rect x="12" y="0" width="46" height="42" rx="4" fill="#9fb5c2"/>
+              <g fill="#edf3f7" opacity="0.75">
+                <rect x="12" y="56" width="9" height="11"/><rect x="28" y="56" width="9" height="11"/><rect x="44" y="56" width="9" height="11"/>
+                <rect x="12" y="74" width="9" height="11"/><rect x="28" y="74" width="9" height="11"/><rect x="44" y="74" width="9" height="11"/>
+                <rect x="12" y="92" width="9" height="11"/><rect x="28" y="92" width="9" height="11"/><rect x="44" y="92" width="9" height="11"/>
+                <rect x="12" y="110" width="9" height="11"/><rect x="28" y="110" width="9" height="11"/><rect x="44" y="110" width="9" height="11"/>
+              </g>
+            </g>
+
+            <g transform="translate(348,128)">
+              <rect x="0" y="28" width="86" height="138" rx="4" fill="#c9b2a6"/>
+              <rect x="10" y="0" width="64" height="28" rx="4" fill="#d7c0b5"/>
+              <g fill="#fff6ee" opacity="0.72">
+                <rect x="12" y="42" width="10" height="12"/><rect x="30" y="42" width="10" height="12"/><rect x="48" y="42" width="10" height="12"/><rect x="66" y="42" width="10" height="12"/>
+                <rect x="12" y="61" width="10" height="12"/><rect x="30" y="61" width="10" height="12"/><rect x="48" y="61" width="10" height="12"/><rect x="66" y="61" width="10" height="12"/>
+                <rect x="12" y="80" width="10" height="12"/><rect x="30" y="80" width="10" height="12"/><rect x="48" y="80" width="10" height="12"/><rect x="66" y="80" width="10" height="12"/>
+              </g>
+            </g>
+
+            <g transform="translate(452,92)">
+              <rect x="0" y="44" width="64" height="174" rx="4" fill="#a7aeb5"/>
+              <rect x="8" y="0" width="48" height="44" rx="4" fill="#b9c0c7"/>
+              <g fill="#eef2f5" opacity="0.72">
+                <rect x="11" y="57" width="8" height="10"/><rect x="27" y="57" width="8" height="10"/><rect x="43" y="57" width="8" height="10"/>
+                <rect x="11" y="75" width="8" height="10"/><rect x="27" y="75" width="8" height="10"/><rect x="43" y="75" width="8" height="10"/>
+                <rect x="11" y="93" width="8" height="10"/><rect x="27" y="93" width="8" height="10"/><rect x="43" y="93" width="8" height="10"/>
+                <rect x="11" y="111" width="8" height="10"/><rect x="27" y="111" width="8" height="10"/><rect x="43" y="111" width="8" height="10"/>
+              </g>
+            </g>
+
+            <g transform="translate(535,120)">
+              <rect x="0" y="30" width="78" height="148" rx="4" fill="#b4bca5"/>
+              <rect x="11" y="0" width="55" height="30" rx="4" fill="#c4ccba"/>
+              <g fill="#f1f4ec" opacity="0.72">
+                <rect x="12" y="44" width="9" height="11"/><rect x="28" y="44" width="9" height="11"/><rect x="44" y="44" width="9" height="11"/>
+                <rect x="12" y="62" width="9" height="11"/><rect x="28" y="62" width="9" height="11"/><rect x="44" y="62" width="9" height="11"/>
+                <rect x="12" y="80" width="9" height="11"/><rect x="28" y="80" width="9" height="11"/><rect x="44" y="80" width="9" height="11"/>
+              </g>
+            </g>
+
+            <g transform="translate(630,86)">
+              <rect x="0" y="46" width="88" height="182" rx="4" fill="#8aa0ad"/>
+              <rect x="16" y="0" width="55" height="46" rx="4" fill="#9cb1bd"/>
+              <g fill="#ebf1f5" opacity="0.72">
+                <rect x="14" y="60" width="10" height="12"/><rect x="32" y="60" width="10" height="12"/><rect x="50" y="60" width="10" height="12"/><rect x="68" y="60" width="10" height="12"/>
+                <rect x="14" y="80" width="10" height="12"/><rect x="32" y="80" width="10" height="12"/><rect x="50" y="80" width="10" height="12"/><rect x="68" y="80" width="10" height="12"/>
+                <rect x="14" y="100" width="10" height="12"/><rect x="32" y="100" width="10" height="12"/><rect x="50" y="100" width="10" height="12"/><rect x="68" y="100" width="10" height="12"/>
+              </g>
+            </g>
+
+            <g transform="translate(734,132)">
+              <rect x="0" y="24" width="58" height="130" rx="4" fill="#c8b8ab"/>
+              <rect x="10" y="0" width="38" height="24" rx="4" fill="#d5c5b8"/>
+              <g fill="#fff7ef" opacity="0.72">
+                <rect x="10" y="38" width="8" height="10"/><rect x="24" y="38" width="8" height="10"/><rect x="38" y="38" width="8" height="10"/>
+                <rect x="10" y="55" width="8" height="10"/><rect x="24" y="55" width="8" height="10"/><rect x="38" y="55" width="8" height="10"/>
+                <rect x="10" y="72" width="8" height="10"/><rect x="24" y="72" width="8" height="10"/><rect x="38" y="72" width="8" height="10"/>
+              </g>
+            </g>
+
+            <g transform="translate(810,106)">
+              <rect x="0" y="36" width="76" height="154" rx="4" fill="#a6b2ba"/>
+              <rect x="12" y="0" width="50" height="36" rx="4" fill="#b7c3cb"/>
+              <g fill="#edf2f5" opacity="0.72">
+                <rect x="12" y="50" width="9" height="11"/><rect x="28" y="50" width="9" height="11"/><rect x="44" y="50" width="9" height="11"/>
+                <rect x="12" y="68" width="9" height="11"/><rect x="28" y="68" width="9" height="11"/><rect x="44" y="68" width="9" height="11"/>
+                <rect x="12" y="86" width="9" height="11"/><rect x="28" y="86" width="9" height="11"/><rect x="44" y="86" width="9" height="11"/>
+                <rect x="12" y="104" width="9" height="11"/><rect x="28" y="104" width="9" height="11"/><rect x="44" y="104" width="9" height="11"/>
+              </g>
+            </g>
+
+            <g transform="translate(903,122)">
+              <rect x="0" y="30" width="92" height="146" rx="4" fill="#b5bda9"/>
+              <rect x="12" y="0" width="67" height="30" rx="4" fill="#c5ccb9"/>
+              <g fill="#f0f4ec" opacity="0.72">
+                <rect x="14" y="45" width="10" height="12"/><rect x="32" y="45" width="10" height="12"/><rect x="50" y="45" width="10" height="12"/><rect x="68" y="45" width="10" height="12"/>
+                <rect x="14" y="64" width="10" height="12"/><rect x="32" y="64" width="10" height="12"/><rect x="50" y="64" width="10" height="12"/><rect x="68" y="64" width="10" height="12"/>
+                <rect x="14" y="83" width="10" height="12"/><rect x="32" y="83" width="10" height="12"/><rect x="50" y="83" width="10" height="12"/><rect x="68" y="83" width="10" height="12"/>
+              </g>
+            </g>
+
+            <g transform="translate(1015,94)">
+              <rect x="0" y="40" width="68" height="170" rx="4" fill="#8ea4b1"/>
+              <rect x="10" y="0" width="47" height="40" rx="4" fill="#9fb4c0"/>
+              <g fill="#edf2f6" opacity="0.72">
+                <rect x="11" y="54" width="8" height="10"/><rect x="27" y="54" width="8" height="10"/><rect x="43" y="54" width="8" height="10"/>
+                <rect x="11" y="72" width="8" height="10"/><rect x="27" y="72" width="8" height="10"/><rect x="43" y="72" width="8" height="10"/>
+                <rect x="11" y="90" width="8" height="10"/><rect x="27" y="90" width="8" height="10"/><rect x="43" y="90" width="8" height="10"/>
+                <rect x="11" y="108" width="8" height="10"/><rect x="27" y="108" width="8" height="10"/><rect x="43" y="108" width="8" height="10"/>
+              </g>
+            </g>
+
+            <g transform="translate(1100,128)">
+              <rect x="0" y="26" width="84" height="140" rx="4" fill="#ccb7aa"/>
+              <rect x="10" y="0" width="62" height="26" rx="4" fill="#dbc6b8"/>
+              <g fill="#fff6ee" opacity="0.72">
+                <rect x="12" y="41" width="10" height="12"/><rect x="30" y="41" width="10" height="12"/><rect x="48" y="41" width="10" height="12"/><rect x="66" y="41" width="10" height="12"/>
+                <rect x="12" y="60" width="10" height="12"/><rect x="30" y="60" width="10" height="12"/><rect x="48" y="60" width="10" height="12"/><rect x="66" y="60" width="10" height="12"/>
+                <rect x="12" y="79" width="10" height="12"/><rect x="30" y="79" width="10" height="12"/><rect x="48" y="79" width="10" height="12"/><rect x="66" y="79" width="10" height="12"/>
+              </g>
+            </g>
+
+            <g transform="translate(1203,112)">
+              <rect x="0" y="32" width="72" height="150" rx="4" fill="#a6b4ad"/>
+              <rect x="10" y="0" width="50" height="32" rx="4" fill="#b7c5be"/>
+              <g fill="#eff4ef" opacity="0.72">
+                <rect x="12" y="47" width="9" height="11"/><rect x="28" y="47" width="9" height="11"/><rect x="44" y="47" width="9" height="11"/>
+                <rect x="12" y="65" width="9" height="11"/><rect x="28" y="65" width="9" height="11"/><rect x="44" y="65" width="9" height="11"/>
+                <rect x="12" y="83" width="9" height="11"/><rect x="28" y="83" width="9" height="11"/><rect x="44" y="83" width="9" height="11"/>
+              </g>
+            </g>
+
+            <g transform="translate(1292,98)">
+              <rect x="0" y="38" width="82" height="164" rx="4" fill="#90a6b4"/>
+              <rect x="13" y="0" width="55" height="38" rx="4" fill="#a3b7c3"/>
+              <g fill="#edf3f7" opacity="0.72">
+                <rect x="14" y="52" width="10" height="12"/><rect x="32" y="52" width="10" height="12"/><rect x="50" y="52" width="10" height="12"/>
+                <rect x="14" y="71" width="10" height="12"/><rect x="32" y="71" width="10" height="12"/><rect x="50" y="71" width="10" height="12"/>
+                <rect x="14" y="90" width="10" height="12"/><rect x="32" y="90" width="10" height="12"/><rect x="50" y="90" width="10" height="12"/>
+                <rect x="14" y="109" width="10" height="12"/><rect x="32" y="109" width="10" height="12"/><rect x="50" y="109" width="10" height="12"/>
+              </g>
+            </g>
+          </g>
         </g>
 
-        <!-- Ground -->
-        <rect x="0" y="298" width="1440" height="4" fill="#FC8A10" opacity="0.35"/>
+        <!-- FOREGROUND NEIGHBORHOOD -->
+        <g class="neighborhood" aria-hidden="true">
+          <path d="M0 286 C120 276, 260 292, 420 284 C620 274, 810 292, 990 283 C1170 274, 1310 289, 1440 282 L1440 300 L0 300 Z"
+                fill="#8fa883" opacity="0.45"/>
+          <path d="M0 290 C180 282, 310 296, 520 288 C710 281, 900 296, 1110 286 C1260 280, 1360 290, 1440 286 L1440 300 L0 300 Z"
+                fill="#a8bc98" opacity="0.72"/>
+
+          <g transform="translate(26,238)">
+            <rect x="16" y="30" width="8" height="34" rx="3" fill="#8b5e3c"/>
+            <circle cx="20" cy="22" r="22" fill="#789a63"/>
+            <circle cx="6" cy="31" r="14" fill="#638652"/>
+            <circle cx="34" cy="31" r="14" fill="#638652"/>
+          </g>
+
+          <g transform="translate(392,242)">
+            <rect x="16" y="28" width="8" height="34" rx="3" fill="#8b5e3c"/>
+            <circle cx="20" cy="21" r="21" fill="#7e9f68"/>
+            <circle cx="6" cy="30" r="13" fill="#648553"/>
+            <circle cx="34" cy="30" r="13" fill="#648553"/>
+          </g>
+
+          <g transform="translate(846,240)">
+            <rect x="16" y="29" width="8" height="34" rx="3" fill="#8b5e3c"/>
+            <circle cx="20" cy="21" r="21" fill="#7b9d66"/>
+            <circle cx="6" cy="31" r="13" fill="#628350"/>
+            <circle cx="34" cy="31" r="13" fill="#628350"/>
+          </g>
+
+          <g transform="translate(1316,242)">
+            <rect x="16" y="28" width="8" height="34" rx="3" fill="#8b5e3c"/>
+            <circle cx="20" cy="21" r="21" fill="#7f9f69"/>
+            <circle cx="6" cy="30" r="13" fill="#648553"/>
+            <circle cx="34" cy="30" r="13" fill="#648553"/>
+          </g>
+
+          <g class="house cute-house" transform="translate(52,196)">
+            <rect x="0" y="46" width="118" height="78" rx="8" fill="#d8d2c6"/>
+            <polygon points="-10,50 59,0 128,50" fill="#5c4b43"/>
+            <rect x="46" y="78" width="24" height="46" rx="4" fill="#f5efe4"/>
+            <circle cx="64" cy="101" r="2" fill="#7f6b5d"/>
+            <rect x="15" y="64" width="22" height="18" rx="3" fill="#eef2f2"/>
+            <rect x="81" y="64" width="22" height="18" rx="3" fill="#eef2f2"/>
+            <line x1="26" y1="64" x2="26" y2="82" stroke="#ffffff" opacity="0.65"/>
+            <line x1="92" y1="64" x2="92" y2="82" stroke="#ffffff" opacity="0.65"/>
+            <rect x="87" y="18" width="14" height="30" rx="2" fill="#7a5b4c"/>
+          </g>
+
+          <g class="house cute-house" transform="translate(198,210)">
+            <rect x="0" y="40" width="96" height="72" rx="8" fill="#b7c3ad"/>
+            <polygon points="-8,44 48,0 104,44" fill="#5f6a59"/>
+            <rect x="38" y="68" width="20" height="44" rx="4" fill="#f3efe6"/>
+            <rect x="13" y="57" width="18" height="16" rx="3" fill="#edf2ec"/>
+            <rect x="65" y="57" width="18" height="16" rx="3" fill="#edf2ec"/>
+          </g>
+
+          <g class="house cute-house" transform="translate(318,182)">
+            <rect x="0" y="52" width="132" height="92" rx="9" fill="#c08a70"/>
+            <polygon points="-12,56 66,0 144,56" fill="#6b4e45"/>
+            <rect x="53" y="88" width="26" height="56" rx="4" fill="#f6efe4"/>
+            <circle cx="74" cy="113" r="2" fill="#8f6a59"/>
+            <rect x="19" y="72" width="24" height="20" rx="3" fill="#eef3f5"/>
+            <rect x="89" y="72" width="24" height="20" rx="3" fill="#eef3f5"/>
+            <line x1="31" y1="72" x2="31" y2="92" stroke="#fff" opacity="0.6"/>
+            <line x1="101" y1="72" x2="101" y2="92" stroke="#fff" opacity="0.6"/>
+            <rect x="95" y="20" width="15" height="35" rx="2" fill="#7d5a4b"/>
+          </g>
+
+          <g class="house cute-house" transform="translate(500,202)">
+            <rect x="0" y="44" width="108" height="78" rx="8" fill="#8fa4b2"/>
+            <polygon points="-10,48 54,0 118,48" fill="#4e5963"/>
+            <rect x="42" y="74" width="22" height="48" rx="4" fill="#f4efe6"/>
+            <rect x="15" y="60" width="20" height="18" rx="3" fill="#eef3f5"/>
+            <rect x="73" y="60" width="20" height="18" rx="3" fill="#eef3f5"/>
+            <rect x="74" y="18" width="14" height="28" rx="2" fill="#6a737b"/>
+          </g>
+
+          <g class="house cute-house" transform="translate(642,190)">
+            <rect x="0" y="48" width="126" height="86" rx="9" fill="#f0e6d8"/>
+            <polygon points="-11,52 63,0 137,52" fill="#625146"/>
+            <rect x="51" y="82" width="24" height="52" rx="4" fill="#fcf7ef"/>
+            <circle cx="69" cy="108" r="2" fill="#8d7768"/>
+            <rect x="18" y="68" width="22" height="18" rx="3" fill="#eef2f1"/>
+            <rect x="86" y="68" width="22" height="18" rx="3" fill="#eef2f1"/>
+            <line x1="29" y1="68" x2="29" y2="86" stroke="#fff" opacity="0.6"/>
+            <line x1="97" y1="68" x2="97" y2="86" stroke="#fff" opacity="0.6"/>
+          </g>
+
+          <g class="house cute-house" transform="translate(798,208)">
+            <rect x="0" y="40" width="100" height="74" rx="8" fill="#a7b8a3"/>
+            <polygon points="-9,44 50,0 109,44" fill="#596254"/>
+            <rect x="40" y="68" width="20" height="46" rx="4" fill="#f6f0e6"/>
+            <rect x="14" y="57" width="18" height="16" rx="3" fill="#edf2ec"/>
+            <rect x="68" y="57" width="18" height="16" rx="3" fill="#edf2ec"/>
+          </g>
+
+          <g class="house cute-house" transform="translate(930,186)">
+            <rect x="0" y="50" width="134" height="92" rx="9" fill="#9faeb5"/>
+            <polygon points="-12,54 67,0 146,54" fill="#525d66"/>
+            <rect x="55" y="88" width="24" height="54" rx="4" fill="#f6f0e6"/>
+            <circle cx="73" cy="114" r="2" fill="#7b8991"/>
+            <rect x="20" y="72" width="24" height="20" rx="3" fill="#eef3f5"/>
+            <rect x="90" y="72" width="24" height="20" rx="3" fill="#eef3f5"/>
+            <rect x="96" y="20" width="15" height="34" rx="2" fill="#68757e"/>
+          </g>
+
+          <g class="house cute-house" transform="translate(1112,206)">
+            <rect x="0" y="42" width="104" height="76" rx="8" fill="#c9b39e"/>
+            <polygon points="-10,46 52,0 114,46" fill="#6c5648"/>
+            <rect x="41" y="72" width="22" height="46" rx="4" fill="#f7efe5"/>
+            <rect x="15" y="59" width="19" height="17" rx="3" fill="#f0f2ef"/>
+            <rect x="70" y="59" width="19" height="17" rx="3" fill="#f0f2ef"/>
+          </g>
+
+          <g class="house cute-house" transform="translate(1240,192)">
+            <rect x="0" y="48" width="122" height="84" rx="9" fill="#b1b9a8"/>
+            <polygon points="-10,52 61,0 132,52" fill="#596052"/>
+            <rect x="49" y="82" width="23" height="50" rx="4" fill="#f5efe4"/>
+            <rect x="18" y="68" width="21" height="18" rx="3" fill="#eef2ec"/>
+            <rect x="83" y="68" width="21" height="18" rx="3" fill="#eef2ec"/>
+            <rect x="86" y="19" width="14" height="31" rx="2" fill="#6a5a4d"/>
+          </g>
+
+          <circle cx="180" cy="286" r="3" fill="#f7f1e8" opacity="0.7"/>
+          <circle cx="304" cy="287" r="2.5" fill="#f7f1e8" opacity="0.65"/>
+          <circle cx="626" cy="286" r="3" fill="#f7f1e8" opacity="0.7"/>
+          <circle cx="920" cy="287" r="2.5" fill="#f7f1e8" opacity="0.65"/>
+          <circle cx="1218" cy="286" r="3" fill="#f7f1e8" opacity="0.7"/>
+        </g>
+
+        <rect x="0" y="298" width="1440" height="4" fill="#8fa883" opacity="0.45"/>
       </svg>
     </div>
 
-    <!-- Hero text, sits on top -->
     <div class="hero-content">
       <p class="eyebrow">Explorable Explanation</p>
       <h1>Can You Live<br><em>There?</em></h1>
@@ -155,7 +346,7 @@
     </div>
   </header>
 
-   <!-- ── Project writeup ────────────────────────────────── -->
+  <!-- ── Project writeup ────────────────────────────────── -->
   <section class="writeup-section">
     <div class="writeup-inner">
       <p class="eyebrow">Project writeup</p>
@@ -175,11 +366,13 @@
           This project turns rent affordability into an interactive article. Move through the story to see how income changes the map, zoom into states for county-level patterns, compare places, and find the salary needed for a dream location.
         </p>
       </div>
+
       <div class="formula-card">
         <h3>Affordability rule</h3>
         <p>Monthly rent is affordable when it is no more than 30% of monthly income.</p>
         <p class="formula">required income = monthly rent × 12 ÷ 0.30</p>
       </div>
+
       <p class="scroll-cue">Scroll to start exploring ↓</p>
     </section>
 
@@ -213,6 +406,7 @@
             <div class="stat-card"><span id="medianRequiredIncome">—</span><small>median required income</small></div>
           </div>
         </div>
+
         <div class="visual-card wide">
           <div class="map-actions">
             <span id="mapModeLabel">Viewing: all states</span>
@@ -243,6 +437,7 @@
             <button class="salary-jump" data-salary="150000">$150k</button>
           </div>
         </div>
+
         <div class="visual-card">
           <h3>Income ladder</h3>
           <svg id="ladderChart" width="100%" height="310"></svg>
@@ -264,6 +459,7 @@
             <select id="compareB"></select>
           </div>
         </div>
+
         <div class="visual-card">
           <h3>County comparison</h3>
           <div id="comparisonCards" class="comparison-cards"></div>
@@ -293,6 +489,7 @@
             <select id="jobSalaryB"></select>
           </div>
         </div>
+
         <div class="visual-card">
           <h3>Job offer comparison</h3>
           <div id="jobComparisonCards" class="comparison-cards"></div>
@@ -310,6 +507,7 @@
             <select id="dreamSelect"></select>
           </div>
         </div>
+
         <div class="visual-card dream-card">
           <h3 id="dreamTitle">Pick a county</h3>
           <div class="big-number" id="dreamRequiredIncome">—</div>
@@ -323,6 +521,7 @@
           <p class="eyebrow">Chapter 6</p>
           <h2>Where would you live?</h2>
           <p>Personalize your search. Pick what matters to you and see which counties are actually affordable at your current income — then see them on the map.</p>
+
           <div class="pref-section">
             <p class="pref-label">Filter by state</p>
             <div class="control-row" style="margin-bottom:0">
@@ -331,6 +530,7 @@
               </select>
             </div>
           </div>
+
           <div class="pref-section">
             <p class="pref-label">Climate &amp; geography</p>
             <div class="checkbox-row">
@@ -339,6 +539,7 @@
               <label><input type="checkbox" id="prefMidwest"> 🌽 midwest</label>
             </div>
           </div>
+
           <div class="pref-section">
             <p class="pref-label">Lifestyle</p>
             <div class="checkbox-row">
@@ -348,6 +549,7 @@
             </div>
           </div>
         </div>
+
         <div class="visual-card ch5-card">
           <h3>Top affordable matches</h3>
           <div class="ch5-layout">
@@ -369,21 +571,14 @@
   <script src="script.js"></script>
 
   <script>
-  /* ── Smooth sun arc + sky gradient ─────────────────────────────
-     Uses requestAnimationFrame for buttery-smooth animation.
-     The sun travels a true semicircle: rises from mid-left edge,
-     arcs over the top, sets at mid-right edge.
-     t = 0..1 over the full cycle (default 12 s).
-  ─────────────────────────────────────────────────────────────── */
   (function () {
     const sun    = document.querySelector('.sun');
     const hero   = document.querySelector('.hero');
     if (!sun || !hero) return;
 
-    const CYCLE_MS = 12000; // full sunrise→sunset cycle duration
+    const CYCLE_MS = 12000;
     let startTime  = null;
 
-    // Lerp between two [r,g,b] colours
     function lerpRGB(a, b, t) {
       return [
         Math.round(a[0] + (b[0] - a[0]) * t),
@@ -391,26 +586,28 @@
         Math.round(a[2] + (b[2] - a[2]) * t),
       ];
     }
-    function rgb(c) { return `rgb(${c[0]},${c[1]},${c[2]})`; }
 
-    // Sky colour stops at key phases  [top, upper-mid, lower-mid, horizon, near-ground]
+    function rgb(c) {
+      return `rgb(${c[0]},${c[1]},${c[2]})`;
+    }
+
     const SKY = {
       sunrise: {
-        top:   [240, 148, 80],   // warm amber
+        top:   [240, 148, 80],
         upper: [248, 180, 110],
         lower: [220, 220, 240],
         horiz: [200, 225, 245],
         base:  [237, 241, 244],
       },
       midday: {
-        top:   [80,  170, 230],  // bright blue
+        top:   [80,  170, 230],
         upper: [130, 200, 240],
         lower: [185, 225, 248],
         horiz: [215, 238, 252],
         base:  [237, 241, 244],
       },
       sunset: {
-        top:   [210, 110, 80],   // warm mauve-coral
+        top:   [210, 110, 80],
         upper: [235, 155, 100],
         lower: [210, 190, 220],
         horiz: [218, 210, 232],
@@ -418,16 +615,43 @@
       },
     };
 
-    // Sun colours at key phases
-    const SUN_INNER = { sunrise: [255,210,140], midday: [255,248,200], sunset: [255,195,140] };
-    const SUN_MID   = { sunrise: [255,140, 50], midday: [255,210, 80], sunset: [255,120, 60] };
-    const SUN_OUTER = { sunrise: [210, 70, 20], midday: [255,160, 30], sunset: [200, 60, 30] };
-    const GLOW_CLR  = { sunrise: [230, 90, 20], midday: [255,200, 60], sunset: [210, 70, 30] };
-    const GLOW_OP   = { sunrise: 0.65,          midday: 0.28,          sunset: 0.65 };
-    const GLOW_SZ   = { sunrise: 20,            midday: 35,            sunset: 20 };
+    const SUN_INNER = {
+      sunrise: [255,210,140],
+      midday:  [255,248,200],
+      sunset:  [255,195,140]
+    };
+
+    const SUN_MID = {
+      sunrise: [255,140, 50],
+      midday:  [255,210, 80],
+      sunset:  [255,120, 60]
+    };
+
+    const SUN_OUTER = {
+      sunrise: [210, 70, 20],
+      midday:  [255,160, 30],
+      sunset:  [200, 60, 30]
+    };
+
+    const GLOW_CLR = {
+      sunrise: [230, 90, 20],
+      midday:  [255,200, 60],
+      sunset:  [210, 70, 30]
+    };
+
+    const GLOW_OP = {
+      sunrise: 0.65,
+      midday:  0.28,
+      sunset:  0.65
+    };
+
+    const GLOW_SZ = {
+      sunrise: 20,
+      midday:  35,
+      sunset:  20
+    };
 
     function lerp3(a, b, c, t) {
-      // t: 0=a, 0.5=b, 1=c — smooth blend across three keyframes
       if (t <= 0.5) {
         const u = t * 2;
         return lerpRGB(a, b, u);
@@ -438,11 +662,11 @@
     }
 
     function applySky(t) {
-      // t = 0..1 (sunrise→midday→sunset)
       const p = {};
       for (const key of ['top','upper','lower','horiz','base']) {
         p[key] = rgb(lerp3(SKY.sunrise[key], SKY.midday[key], SKY.sunset[key], t));
       }
+
       hero.style.background = `linear-gradient(180deg,
         ${p.top}   0%,
         ${p.upper} 20%,
@@ -453,37 +677,35 @@
 
     function applySun(t) {
       const inner = rgb(lerp3(SUN_INNER.sunrise, SUN_INNER.midday, SUN_INNER.sunset, t));
-      const mid   = rgb(lerp3(SUN_MID.sunrise,   SUN_MID.midday,   SUN_MID.sunset,   t));
-      const outer = rgb(lerp3(SUN_OUTER.sunrise,  SUN_OUTER.midday, SUN_OUTER.sunset, t));
+      const mid   = rgb(lerp3(SUN_MID.sunrise, SUN_MID.midday, SUN_MID.sunset, t));
+      const outer = rgb(lerp3(SUN_OUTER.sunrise, SUN_OUTER.midday, SUN_OUTER.sunset, t));
       const glowC = lerp3(GLOW_CLR.sunrise, GLOW_CLR.midday, GLOW_CLR.sunset, t);
-      const glowO = GLOW_OP.sunrise  + (GLOW_OP.midday  - GLOW_OP.sunrise)  * (t <= 0.5 ? t*2 : 1-(t-0.5)*2);
-      const glowS = GLOW_SZ.sunrise  + (GLOW_SZ.midday  - GLOW_SZ.sunrise)  * (t <= 0.5 ? t*2 : 1-(t-0.5)*2);
+      const glowO = GLOW_OP.sunrise + (GLOW_OP.midday - GLOW_OP.sunrise) * (t <= 0.5 ? t * 2 : 1 - (t - 0.5) * 2);
+      const glowS = GLOW_SZ.sunrise + (GLOW_SZ.midday - GLOW_SZ.sunrise) * (t <= 0.5 ? t * 2 : 1 - (t - 0.5) * 2);
 
       sun.style.background = `radial-gradient(circle, ${inner} 0%, ${mid} 55%, ${outer} 100%)`;
-      sun.style.boxShadow  = `0 0 ${glowS*3}px ${glowS}px rgba(${glowC[0]},${glowC[1]},${glowC[2]},${glowO.toFixed(2)})`;
+      sun.style.boxShadow  = `0 0 ${glowS * 3}px ${glowS}px rgba(${glowC[0]},${glowC[1]},${glowC[2]},${glowO.toFixed(2)})`;
     }
 
     function frame(ts) {
       if (!startTime) startTime = ts;
-      const elapsed = (ts - startTime) % CYCLE_MS;
-      const t = elapsed / CYCLE_MS; // 0..1
 
-      // Sun position: semicircle from mid-left (t=0) → top-center (t=0.5) → mid-right (t=1)
-      // θ goes from π → 0 as t goes 0 → 1
-      const theta = Math.PI * (1 - t);          // π..0
+      const elapsed = (ts - startTime) % CYCLE_MS;
+      const t = elapsed / CYCLE_MS;
+
+      const theta = Math.PI * (1 - t);
       const heroW = hero.clientWidth;
       const heroH = hero.clientHeight;
-      const rx    = heroW * 0.5;                // horizontal radius = half width
-      const ry    = heroH * 0.42;               // vertical radius
+      const rx    = heroW * 0.5;
+      const ry    = heroH * 0.42;
 
-      // Center of the arc: horizontally centered, vertically at 50% of hero
       const cx = heroW / 2;
       const cy = heroH * 0.50;
 
-      const sunX = cx + rx * Math.cos(theta);   // left edge at t=0, right at t=1
-      const sunY = cy - ry * Math.sin(theta);   // above center at peak (sin>0 → subtract)
+      const sunX = cx + rx * Math.cos(theta);
+      const sunY = cy - ry * Math.sin(theta);
 
-      sun.style.left = (sunX - 60) + 'px';      // -60 to center the 120px sun
+      sun.style.left = (sunX - 60) + 'px';
       sun.style.top  = (sunY - 60) + 'px';
 
       applySky(t);
@@ -492,7 +714,6 @@
       requestAnimationFrame(frame);
     }
 
-    // Remove old CSS animations on the sun
     sun.style.animation = 'none';
     requestAnimationFrame(frame);
   })();
