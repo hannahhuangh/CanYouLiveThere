@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Can You Live There? — Explorable Rent Affordability</title>
+  <title>Can You Live There? — Explorable Housing Cost Affordability</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
@@ -335,13 +335,12 @@
     </div>
 
     <div class="hero-content">
-      <p class="eyebrow">Explorable Explanation</p>
       <h1>Can You Live<br><em>There?</em></h1>
-      <p class="hero-subtitle">A $75,000 salary can feel comfortable in one county and impossible in another.</p>
+      <p class="hero-subtitle">Why can a $75,000 salary can feel comfortable in one county, but impossible in another?</p>
       <div class="tag">
         <span>Zillow ZORI rent data</span>
         <span>IRS 2022 AGI by ZIP</span>
-        <span>30% rent affordability rule</span>
+        <span>30% housing cost affordability rule</span>
       </div>
     </div>
   </header>
@@ -360,17 +359,17 @@
   <main>
     <section class="story-section intro-section">
       <div class="story-copy">
-        <p class="eyebrow">The question</p>
+        <p class="eyebrow">The Main Question</p>
         <h2>Where does your income actually stretch?</h2>
         <p>
-          This project turns rent affordability into an interactive article. Move through the story to see how income changes the map, zoom into states for county-level patterns, compare places, and find the salary needed for a dream location.
+          This project turns home affordability into an interactive article. Move through the story to see how income changes the map, zoom into states for county-level patterns, compare places, and find the salary needed for a dream location.
         </p>
       </div>
 
       <div class="formula-card">
         <h3>Affordability rule</h3>
-        <p>Monthly rent is affordable when it is no more than 30% of monthly income.</p>
-        <p class="formula">required income = monthly rent × 12 ÷ 0.30</p>
+        <p>Housing is affordable when it is no more than 30% of monthly income.</p>
+        <p class="formula">required income = monthly cost × 12 ÷ 0.30</p>
       </div>
 
       <p class="scroll-cue">Scroll to start exploring ↓</p>
@@ -398,7 +397,7 @@
         <div class="chapter-text">
           <p class="eyebrow">Chapter 1</p>
           <h2>The affordability illusion</h2>
-          <p>Start with one income and watch the map answer a simple question: where does rent stay below the 30% rule?</p>
+          <p>Start with one income and watch the map answer a simple question: where does housing price stay below the 30% rule?</p>
           <p class="use-note">Use the income slider above, then click a state to zoom into county-level affordability.</p>
           <div class="stat-grid">
             <div class="stat-card"><span id="affordableStateCount">—</span><small>affordable states</small></div>
@@ -449,7 +448,7 @@
         <div class="chapter-text">
           <p class="eyebrow">Chapter 3</p>
           <h2>Same salary, different life</h2>
-          <p>Click counties on the zoomed map or use the dropdowns below. The comparison makes the argument concrete: the same salary produces very different rent burdens.</p>
+          <p>Click counties on the zoomed map or use the dropdowns below. The comparison makes the argument concrete: the same salary produces very different cost burdens.</p>
           <div class="control-row mini-controls">
             <label for="compareA">Place A</label>
             <select id="compareA"></select>
@@ -471,7 +470,7 @@
         <div class="chapter-text">
           <p class="eyebrow">Chapter 4</p>
           <h2>Different salary, different life</h2>
-          <p>Got two job offers in different cities? Enter each county and its salary to see how rent burden compares — even when the paychecks aren't equal.</p>
+          <p>Got two job offers in different cities? Enter each county and its salary to see how cost burden compares — even when the paychecks aren't equal.</p>
           <div class="control-row mini-controls">
             <label for="jobCountyA">Place A</label>
             <select id="jobCountyA"></select>
@@ -501,7 +500,7 @@
         <div class="chapter-text">
           <p class="eyebrow">Chapter 5</p>
           <h2>What would it take to live there?</h2>
-          <p>Instead of asking "can I afford this place?", flip the question: "how much would I need to earn to live there without being rent-burdened?"</p>
+          <p>Instead of asking "can I afford this place?", flip the question: "how much would I need to earn to live there without being cost-burdened?"</p>
           <div class="control-row mini-controls">
             <label for="dreamSelect">Dream county</label>
             <select id="dreamSelect"></select>
@@ -544,7 +543,7 @@
             <p class="pref-label">Lifestyle</p>
             <div class="checkbox-row">
               <label><input type="checkbox" id="prefUrban"> 🏙️ more urban (more ZIP data)</label>
-              <label><input type="checkbox" id="prefLowRent"> 💸 very low rent (&lt;$1,200/mo)</label>
+              <label><input type="checkbox" id="prefLowRent"> 💸 very low cost (&lt;$1,200/mo)</label>
               <label><input type="checkbox" id="prefBuffer"> 🛡️ comfortable buffer (&lt;20%)</label>
             </div>
           </div>
@@ -565,7 +564,7 @@
   </main>
 
   <footer>
-    Values are estimates for exploratory visualization. Rent affordability uses the 30% rule.
+    Values are estimates for exploratory visualization. Housing affordability uses the 30% rule.
   </footer>
 
   <script src="script.js"></script>
