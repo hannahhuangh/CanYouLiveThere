@@ -670,3 +670,100 @@ footer {
 .writeup-section { background: var(--card); border-bottom: 1px solid var(--border); }
 .writeup-inner   { max-width: 820px; margin: 0 auto; padding: 4rem 3rem; }
 .writeup-inner p { margin-bottom: 1.1rem; font-size: 0.95rem; line-height: 1.85; }
+
+/* ── Full-screen story pages ───────────────────────── */
+
+/* Make the main content behave like full-screen pages */
+main {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+}
+
+/* Question page on its own full screen */
+.story-section.intro-section {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(280px, 0.8fr) minmax(360px, 1.2fr);
+  align-items: center;
+  padding: 6rem 6vw;
+  border-top: 1px solid var(--border);
+}
+
+/* Every chapter takes up the full screen */
+.chapter {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(280px, 0.75fr) minmax(420px, 1.25fr);
+  gap: 2rem;
+  align-items: center;
+  padding: 6rem 6vw;
+  border-top: 1px solid var(--border);
+}
+
+/* Keep map chapter wider */
+.chapter-map {
+  grid-template-columns: minmax(260px, 0.55fr) minmax(520px, 1.45fr);
+}
+
+/* Keep wide chapter wider too */
+.chapter-wide {
+  grid-template-columns: minmax(280px, 0.6fr) minmax(420px, 1.4fr);
+}
+
+/* Since each section is full-screen, the text does not need to stick */
+.chapter-text {
+  position: relative;
+  top: auto;
+}
+
+/* Let cards fit nicely inside each full-screen section */
+.visual-card {
+  max-height: calc(100vh - 10rem);
+  overflow-y: auto;
+}
+
+/* Keep the map card large, but still within the screen */
+.visual-card.wide {
+  min-height: auto;
+  max-height: calc(100vh - 9rem);
+}
+
+/* Make the map slightly shorter so it fits better */
+#mapChart {
+  height: 500px;
+}
+
+/* Make scrolling snap gently from page to page */
+html {
+  scroll-behavior: smooth;
+  scroll-snap-type: y proximity;
+}
+
+.hero,
+.writeup-section,
+.story-section,
+.chapter {
+  scroll-snap-align: start;
+}
+
+/* Mobile version */
+@media (max-width: 900px) {
+  .story-section.intro-section,
+  .chapter,
+  .chapter-map,
+  .chapter-wide {
+    min-height: auto;
+    grid-template-columns: 1fr;
+    padding: 4rem 1.25rem;
+  }
+
+  .visual-card {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  #mapChart {
+    height: 420px;
+  }
+}
