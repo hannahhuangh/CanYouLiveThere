@@ -55,7 +55,6 @@
         <rect x="1390" y="165" width="55" height="135" fill="#17B3D9" opacity="0.4"/>
 
         <!-- Front row houses -->
-        <!-- House: body + roof as polygon -->
         <g class="house" transform="translate(30,210)">
           <rect x="0" y="30" width="70" height="60" fill="#FC8A10"/>
           <polygon points="35,0 70,30 0,30" fill="#c96800"/>
@@ -155,7 +154,7 @@
     </div>
   </header>
 
-   <!-- ── Project writeup ────────────────────────────────── -->
+  <!-- ── Project writeup ────────────────────────────────── -->
   <section class="writeup-section">
     <div class="writeup-inner">
       <p class="eyebrow">Project writeup</p>
@@ -205,6 +204,7 @@
           <p class="eyebrow">Chapter 1</p>
           <h2>The affordability illusion</h2>
           <p>Start with one income and watch the map answer a simple question: where does rent stay below the 30% rule?</p>
+          <p class="use-note">Use the income slider above, then click a state to zoom into county-level affordability.</p>
           <div class="stat-grid">
             <div class="stat-card"><span id="affordableStateCount">—</span><small>affordable states</small></div>
             <div class="stat-card"><span id="affordableCountyCount">—</span><small>affordable counties</small></div>
@@ -231,7 +231,7 @@
       <section class="chapter" data-salary="40000">
         <div class="chapter-text">
           <p class="eyebrow">Chapter 2</p>
-          <h2>What happens when income changes?</h2>
+          <h2>A raise changes the map</h2>
           <p>Use the income buttons or scroll through the chapters. The page updates the same map, so you can see affordability expand and contract.</p>
           <div class="salary-buttons">
             <button class="salary-jump" data-salary="40000">$40k</button>
@@ -301,7 +301,7 @@
       <section class="chapter">
         <div class="chapter-text">
           <p class="eyebrow">Chapter 5</p>
-          <h2>Follow your dream location</h2>
+          <h2>What would it take to live there?</h2>
           <p>Instead of asking "can I afford this place?", flip the question: "how much would I need to earn to live there without being rent-burdened?"</p>
           <div class="control-row mini-controls">
             <label for="dreamSelect">Dream county</label>
@@ -378,10 +378,9 @@
     const hero   = document.querySelector('.hero');
     if (!sun || !hero) return;
 
-    const CYCLE_MS = 12000; // full sunrise→sunset cycle duration
+    const CYCLE_MS = 12000;
     let startTime  = null;
 
-    // Lerp between two [r,g,b] colours
     function lerpRGB(a, b, t) {
       return [
         Math.round(a[0] + (b[0] - a[0]) * t),
@@ -391,24 +390,23 @@
     }
     function rgb(c) { return `rgb(${c[0]},${c[1]},${c[2]})`; }
 
-    // Sky colour stops at key phases  [top, upper-mid, lower-mid, horizon, near-ground]
     const SKY = {
       sunrise: {
-        top:   [240, 148, 80],   // warm amber
+        top:   [240, 148, 80],
         upper: [248, 180, 110],
         lower: [220, 220, 240],
         horiz: [200, 225, 245],
         base:  [237, 241, 244],
       },
       midday: {
-        top:   [80,  170, 230],  // bright blue
+        top:   [80,  170, 230],
         upper: [130, 200, 240],
         lower: [185, 225, 248],
         horiz: [215, 238, 252],
         base:  [237, 241, 244],
       },
       sunset: {
-        top:   [210, 110, 80],   // warm mauve-coral
+        top:   [210, 110, 80],
         upper: [235, 155, 100],
         lower: [210, 190, 220],
         horiz: [218, 210, 232],
@@ -416,7 +414,6 @@
       },
     };
 
-    // Sun colours at key phases
     const SUN_INNER = { sunrise: [255,210,140], midday: [255,248,200], sunset: [255,195,140] };
     const SUN_MID   = { sunrise: [255,140, 50], midday: [255,210, 80], sunset: [255,120, 60] };
     const SUN_OUTER = { sunrise: [210, 70, 20], midday: [255,160, 30], sunset: [200, 60, 30] };
@@ -425,7 +422,6 @@
     const GLOW_SZ   = { sunrise: 20,            midday: 35,            sunset: 20 };
 
     function lerp3(a, b, c, t) {
-      // t: 0=a, 0.5=b, 1=c — smooth blend across three keyframes
       if (t <= 0.5) {
         const u = t * 2;
         return lerpRGB(a, b, u);
@@ -436,7 +432,6 @@
     }
 
     function applySky(t) {
-      // t = 0..1 (sunrise→midday→sunset)
       const p = {};
       for (const key of ['top','upper','lower','horiz','base']) {
         p[key] = rgb(lerp3(SKY.sunrise[key], SKY.midday[key], SKY.sunset[key], t));
@@ -452,36 +447,33 @@
     function applySun(t) {
       const inner = rgb(lerp3(SUN_INNER.sunrise, SUN_INNER.midday, SUN_INNER.sunset, t));
       const mid   = rgb(lerp3(SUN_MID.sunrise,   SUN_MID.midday,   SUN_MID.sunset,   t));
-      const outer = rgb(lerp3(SUN_OUTER.sunrise,  SUN_OUTER.midday, SUN_OUTER.sunset, t));
+      const outer = rgb(lerp3(SUN_OUTER.sunrise, SUN_OUTER.midday, SUN_OUTER.sunset, t));
       const glowC = lerp3(GLOW_CLR.sunrise, GLOW_CLR.midday, GLOW_CLR.sunset, t);
-      const glowO = GLOW_OP.sunrise  + (GLOW_OP.midday  - GLOW_OP.sunrise)  * (t <= 0.5 ? t*2 : 1-(t-0.5)*2);
-      const glowS = GLOW_SZ.sunrise  + (GLOW_SZ.midday  - GLOW_SZ.sunrise)  * (t <= 0.5 ? t*2 : 1-(t-0.5)*2);
+      const glowO = GLOW_OP.sunrise + (GLOW_OP.midday - GLOW_OP.sunrise) * (t <= 0.5 ? t * 2 : 1 - (t - 0.5) * 2);
+      const glowS = GLOW_SZ.sunrise + (GLOW_SZ.midday - GLOW_SZ.sunrise) * (t <= 0.5 ? t * 2 : 1 - (t - 0.5) * 2);
 
       sun.style.background = `radial-gradient(circle, ${inner} 0%, ${mid} 55%, ${outer} 100%)`;
-      sun.style.boxShadow  = `0 0 ${glowS*3}px ${glowS}px rgba(${glowC[0]},${glowC[1]},${glowC[2]},${glowO.toFixed(2)})`;
+      sun.style.boxShadow  = `0 0 ${glowS * 3}px ${glowS}px rgba(${glowC[0]},${glowC[1]},${glowC[2]},${glowO.toFixed(2)})`;
     }
 
     function frame(ts) {
       if (!startTime) startTime = ts;
       const elapsed = (ts - startTime) % CYCLE_MS;
-      const t = elapsed / CYCLE_MS; // 0..1
+      const t = elapsed / CYCLE_MS;
 
-      // Sun position: semicircle from mid-left (t=0) → top-center (t=0.5) → mid-right (t=1)
-      // θ goes from π → 0 as t goes 0 → 1
-      const theta = Math.PI * (1 - t);          // π..0
+      const theta = Math.PI * (1 - t);
       const heroW = hero.clientWidth;
       const heroH = hero.clientHeight;
-      const rx    = heroW * 0.5;                // horizontal radius = half width
-      const ry    = heroH * 0.42;               // vertical radius
+      const rx    = heroW * 0.5;
+      const ry    = heroH * 0.42;
 
-      // Center of the arc: horizontally centered, vertically at 50% of hero
       const cx = heroW / 2;
       const cy = heroH * 0.50;
 
-      const sunX = cx + rx * Math.cos(theta);   // left edge at t=0, right at t=1
-      const sunY = cy - ry * Math.sin(theta);   // above center at peak (sin>0 → subtract)
+      const sunX = cx + rx * Math.cos(theta);
+      const sunY = cy - ry * Math.sin(theta);
 
-      sun.style.left = (sunX - 60) + 'px';      // -60 to center the 120px sun
+      sun.style.left = (sunX - 60) + 'px';
       sun.style.top  = (sunY - 60) + 'px';
 
       applySky(t);
@@ -490,7 +482,6 @@
       requestAnimationFrame(frame);
     }
 
-    // Remove old CSS animations on the sun
     sun.style.animation = 'none';
     requestAnimationFrame(frame);
   })();
