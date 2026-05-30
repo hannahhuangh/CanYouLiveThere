@@ -55,6 +55,7 @@
         <rect x="1390" y="165" width="55" height="135" fill="#17B3D9" opacity="0.4"/>
 
         <!-- Front row houses -->
+        <!-- House: body + roof as polygon -->
         <g class="house" transform="translate(30,210)">
           <rect x="0" y="30" width="70" height="60" fill="#FC8A10"/>
           <polygon points="35,0 70,30 0,30" fill="#c96800"/>
@@ -154,7 +155,7 @@
     </div>
   </header>
 
-  <!-- ── Project writeup ────────────────────────────────── -->
+   <!-- ── Project writeup ────────────────────────────────── -->
   <section class="writeup-section">
     <div class="writeup-inner">
       <p class="eyebrow">Project writeup</p>
@@ -179,6 +180,7 @@
         <p>Monthly rent is affordable when it is no more than 30% of monthly income.</p>
         <p class="formula">required income = monthly rent × 12 ÷ 0.30</p>
       </div>
+      <p class="scroll-cue">Scroll to start exploring ↓</p>
     </section>
 
     <section class="control-panel sticky-controls">
@@ -186,7 +188,7 @@
         <label for="salarySlider">Annual income</label>
         <input id="salarySlider" type="range" min="30000" max="150000" step="5000" value="75000">
         <span id="salaryValue">$75,000</span>
-        <button id="playSalaryButton" type="button">Animate raise</button>
+        <button id="playSalaryButton" type="button">Watch income rise</button>
       </div>
       <div class="control-row">
         <label for="stateSelect">Explore state</label>
@@ -378,9 +380,10 @@
     const hero   = document.querySelector('.hero');
     if (!sun || !hero) return;
 
-    const CYCLE_MS = 12000;
+    const CYCLE_MS = 12000; // full sunrise→sunset cycle duration
     let startTime  = null;
 
+    // Lerp between two [r,g,b] colours
     function lerpRGB(a, b, t) {
       return [
         Math.round(a[0] + (b[0] - a[0]) * t),
@@ -390,23 +393,24 @@
     }
     function rgb(c) { return `rgb(${c[0]},${c[1]},${c[2]})`; }
 
+    // Sky colour stops at key phases  [top, upper-mid, lower-mid, horizon, near-ground]
     const SKY = {
       sunrise: {
-        top:   [240, 148, 80],
+        top:   [240, 148, 80],   // warm amber
         upper: [248, 180, 110],
         lower: [220, 220, 240],
         horiz: [200, 225, 245],
         base:  [237, 241, 244],
       },
       midday: {
-        top:   [80,  170, 230],
+        top:   [80,  170, 230],  // bright blue
         upper: [130, 200, 240],
         lower: [185, 225, 248],
         horiz: [215, 238, 252],
         base:  [237, 241, 244],
       },
       sunset: {
-        top:   [210, 110, 80],
+        top:   [210, 110, 80],   // warm mauve-coral
         upper: [235, 155, 100],
         lower: [210, 190, 220],
         horiz: [218, 210, 232],
@@ -414,6 +418,7 @@
       },
     };
 
+    // Sun colours at key phases
     const SUN_INNER = { sunrise: [255,210,140], midday: [255,248,200], sunset: [255,195,140] };
     const SUN_MID   = { sunrise: [255,140, 50], midday: [255,210, 80], sunset: [255,120, 60] };
     const SUN_OUTER = { sunrise: [210, 70, 20], midday: [255,160, 30], sunset: [200, 60, 30] };
@@ -422,6 +427,7 @@
     const GLOW_SZ   = { sunrise: 20,            midday: 35,            sunset: 20 };
 
     function lerp3(a, b, c, t) {
+      // t: 0=a, 0.5=b, 1=c — smooth blend across three keyframes
       if (t <= 0.5) {
         const u = t * 2;
         return lerpRGB(a, b, u);
@@ -432,6 +438,7 @@
     }
 
     function applySky(t) {
+      // t = 0..1 (sunrise→midday→sunset)
       const p = {};
       for (const key of ['top','upper','lower','horiz','base']) {
         p[key] = rgb(lerp3(SKY.sunrise[key], SKY.midday[key], SKY.sunset[key], t));
@@ -447,33 +454,36 @@
     function applySun(t) {
       const inner = rgb(lerp3(SUN_INNER.sunrise, SUN_INNER.midday, SUN_INNER.sunset, t));
       const mid   = rgb(lerp3(SUN_MID.sunrise,   SUN_MID.midday,   SUN_MID.sunset,   t));
-      const outer = rgb(lerp3(SUN_OUTER.sunrise, SUN_OUTER.midday, SUN_OUTER.sunset, t));
+      const outer = rgb(lerp3(SUN_OUTER.sunrise,  SUN_OUTER.midday, SUN_OUTER.sunset, t));
       const glowC = lerp3(GLOW_CLR.sunrise, GLOW_CLR.midday, GLOW_CLR.sunset, t);
-      const glowO = GLOW_OP.sunrise + (GLOW_OP.midday - GLOW_OP.sunrise) * (t <= 0.5 ? t * 2 : 1 - (t - 0.5) * 2);
-      const glowS = GLOW_SZ.sunrise + (GLOW_SZ.midday - GLOW_SZ.sunrise) * (t <= 0.5 ? t * 2 : 1 - (t - 0.5) * 2);
+      const glowO = GLOW_OP.sunrise  + (GLOW_OP.midday  - GLOW_OP.sunrise)  * (t <= 0.5 ? t*2 : 1-(t-0.5)*2);
+      const glowS = GLOW_SZ.sunrise  + (GLOW_SZ.midday  - GLOW_SZ.sunrise)  * (t <= 0.5 ? t*2 : 1-(t-0.5)*2);
 
       sun.style.background = `radial-gradient(circle, ${inner} 0%, ${mid} 55%, ${outer} 100%)`;
-      sun.style.boxShadow  = `0 0 ${glowS * 3}px ${glowS}px rgba(${glowC[0]},${glowC[1]},${glowC[2]},${glowO.toFixed(2)})`;
+      sun.style.boxShadow  = `0 0 ${glowS*3}px ${glowS}px rgba(${glowC[0]},${glowC[1]},${glowC[2]},${glowO.toFixed(2)})`;
     }
 
     function frame(ts) {
       if (!startTime) startTime = ts;
       const elapsed = (ts - startTime) % CYCLE_MS;
-      const t = elapsed / CYCLE_MS;
+      const t = elapsed / CYCLE_MS; // 0..1
 
-      const theta = Math.PI * (1 - t);
+      // Sun position: semicircle from mid-left (t=0) → top-center (t=0.5) → mid-right (t=1)
+      // θ goes from π → 0 as t goes 0 → 1
+      const theta = Math.PI * (1 - t);          // π..0
       const heroW = hero.clientWidth;
       const heroH = hero.clientHeight;
-      const rx    = heroW * 0.5;
-      const ry    = heroH * 0.42;
+      const rx    = heroW * 0.5;                // horizontal radius = half width
+      const ry    = heroH * 0.42;               // vertical radius
 
+      // Center of the arc: horizontally centered, vertically at 50% of hero
       const cx = heroW / 2;
       const cy = heroH * 0.50;
 
-      const sunX = cx + rx * Math.cos(theta);
-      const sunY = cy - ry * Math.sin(theta);
+      const sunX = cx + rx * Math.cos(theta);   // left edge at t=0, right at t=1
+      const sunY = cy - ry * Math.sin(theta);   // above center at peak (sin>0 → subtract)
 
-      sun.style.left = (sunX - 60) + 'px';
+      sun.style.left = (sunX - 60) + 'px';      // -60 to center the 120px sun
       sun.style.top  = (sunY - 60) + 'px';
 
       applySky(t);
@@ -482,6 +492,7 @@
       requestAnimationFrame(frame);
     }
 
+    // Remove old CSS animations on the sun
     sun.style.animation = 'none';
     requestAnimationFrame(frame);
   })();
