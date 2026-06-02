@@ -333,11 +333,35 @@ function drawSalaryMap(stateData, countyData, salary) {
   document.getElementById("mapModeLabel").textContent = `Viewing: ${selectedMapState} counties`;
 }
 
+function chapter2IncomeSteps(selectedSalary) {
+  const base = Math.max(30000, Math.min(150000, Math.round((+selectedSalary || storySalary) / 5000) * 5000));
+  const milestoneIncomes = [40000, 60000, 80000, 100000, 150000];
+  const upcomingMilestones = milestoneIncomes.filter(income => income > base);
+
+  // Story controls should always begin with the exact salary the user chose,
+  // then continue upward through the fixed storytelling milestones.
+  return Array.from(new Set([base, ...upcomingMilestones]));
+}
+
+function chapter2LadderBars(selectedSalary, currentSalary) {
+  const chosen = Math.max(30000, Math.min(150000, Math.round((+selectedSalary || storySalary) / 5000) * 5000));
+  const current = Math.max(30000, Math.min(150000, Math.round((+currentSalary || chosen) / 5000) * 5000));
+
+  // The visible chart is the full comparison ladder. It should not shrink just
+  // because the guided story starts at a higher salary like $85k.
+  return Array.from(new Set([45000, 60000, 80000, 100000, 150000, chosen, current]))
+    .filter(income => income >= 30000 && income <= 150000)
+    .sort((a, b) => a - b);
+}
+
 function drawIncomeLadder(currentSalary) {
   const { svg, W, H } = chartFrame("ladderChart", 310);
   const margin = { top: 70, right: 45, bottom: 50, left: 42 };
 
-  const incomes = [40000, 60000, 80000, 100000, 150000];
+  // In guided Chapter 2, keep the full ladder visible while the marker moves
+  // through the selected salary's story steps.
+  const ladderStartSalary = (!isExplorationMode && storyLadderBaseSalary) ? storyLadderBaseSalary : currentSalary;
+  const incomes = chapter2LadderBars(ladderStartSalary, currentSalary);
 
   const data = incomes.map(income => {
     const rows = withSalary(COUNTY_DATA, income);
@@ -902,6 +926,7 @@ function updatePersonalSummary(salary) {
 }
 
 function enterExplorationMode() {
+  storyLadderBaseSalary = storySalary;
   isExplorationMode = true;
   userHasSetSalary = true;
   document.body.classList.add("exploration-unlocked");
@@ -971,10 +996,8 @@ function updateStoryChrome(activeSection) {
 }
 
 let storyLadderStepIndex = 0;
-const storyLadderSteps = () => {
-  const base = Math.max(30000, Math.round(storySalary / 5000) * 5000);
-  return Array.from(new Set([base, Math.min(150000, base + 15000), storyCareerSalary(), 150000]));
-};
+let storyLadderBaseSalary = storySalary;
+const storyLadderSteps = () => chapter2IncomeSteps(storyLadderBaseSalary);
 
 function setupStoryLadderControls() {
   const box = document.getElementById("storyLadderControls");
@@ -989,6 +1012,7 @@ function setupStoryLadderControls() {
 }
 
 function applyStoryLadderStep() {
+  if (!storyLadderBaseSalary) storyLadderBaseSalary = storySalary;
   const steps = storyLadderSteps();
   storyLadderStepIndex = Math.max(0, Math.min(storyLadderStepIndex, steps.length - 1));
   const salary = steps[storyLadderStepIndex];
@@ -1202,6 +1226,7 @@ Promise.all([
   document.querySelectorAll(".salary-choice").forEach(button => {
     button.addEventListener("click", () => {
       storySalary = +button.dataset.salary;
+      storyLadderBaseSalary = storySalary;
       storyAutoAnimated = false;
       storyLadderStepIndex = 0;
       document.querySelectorAll(".salary-choice").forEach(btn => btn.classList.remove("active"));
