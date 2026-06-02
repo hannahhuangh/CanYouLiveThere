@@ -171,19 +171,20 @@ function withSalary(rows, salary) {
       ...d,
       salary_rent_burden: burden,
       salary_rent_burden_percent: burden * 100,
-      salary_category: categoryFromBurden(burden)
+      salary_category: categoryFromBurden(burden),
+      required_income: rent * 12 / 0.30
     };
   });
 }
 
 function setSalary(value, shouldUpdate = true, fromUser = false) {
-  const salary = Math.max(30000, Math.min(150000, Math.round(value / 5000) * 5000));
+  const salary = Math.max(30000, Math.min(300000, Math.round(value / 5000) * 5000));
 
   if (!fromUser && userHasSetSalary) return;
   if (fromUser) userHasSetSalary = true;
 
   document.getElementById("salarySlider").value = salary;
-  d3.select("#salaryValue").text(salary >= 150000 ? "$150,000+" : formatDollar(salary));
+  d3.select("#salaryValue").text(salary >= 300000 ? "$300,000+" : formatDollar(salary));
   if (shouldUpdate) updateAll(salary);
 }
 
@@ -254,6 +255,7 @@ function drawSalaryMap(stateData, countyData, salary) {
             Avg monthly rent: ${formatDollar(row.avg_monthly_rent)}<br>
             Rent burden: ${formatPercent(row.salary_rent_burden_percent)}<br>
             Category: ${row.salary_category}<br>
+            Required income: ${formatDollar(row.required_income)}<br>
             ZIPs included: ${row.zip_count}
           `);
       })
@@ -457,7 +459,7 @@ function populateDropdowns() {
   if (selectedCountyIds[0]) d3.select("#jobCountyA").property("value", selectedCountyIds[0]);
   if (selectedCountyIds[1]) d3.select("#jobCountyB").property("value", selectedCountyIds[1]);
 
-  const salaryOptions = Array.from({ length: (150000 - 30000) / 5000 + 1 }, (_, i) => 30000 + i * 5000);
+  const salaryOptions = Array.from({ length: (300000 - 30000) / 5000 + 1 }, (_, i) => 30000 + i * 5000);
   ["#jobSalaryA", "#jobSalaryB"].forEach((id, idx) => {
     const sel = d3.select(id).html("");
     salaryOptions.forEach(s => sel.append("option").attr("value", s).text(formatDollar(s)));
@@ -525,13 +527,16 @@ function drawJobComparison() {
   if (!rowA || !rowB) return;
 
   const enrich = (row, salary) => {
-    const burden = salary > 0 ? row.avg_monthly_rent / (salary / 12) : Infinity;
+    const multiplier = getHouseholdMultiplier();
+    const adjustedRent = row.avg_monthly_rent * multiplier;
+    const burden = salary > 0 ? adjustedRent / (salary / 12) : Infinity;
     return {
       ...row,
       job_salary: salary,
       salary_rent_burden: burden,
       salary_rent_burden_percent: burden * 100,
-      salary_category: categoryFromBurden(burden)
+      salary_category: categoryFromBurden(burden),
+      required_income: adjustedRent * 12 / 0.30
     };
   };
 
@@ -612,7 +617,7 @@ function drawDreamLocation(salary) {
   const margin = { top: 25, right: 20, bottom: 35, left: 36 };
   const data = [
     { label: "Your salary", value: salary },
-    { label: "Needed", value: row.required_income }
+    { label: "Needed", value: adjustedRequired }
   ];
   const x = d3.scaleBand().domain(data.map(d => d.label)).range([margin.left, W - margin.right]).padding(0.35);
   const y = d3.scaleLinear().domain([0, d3.max(data, d => d.value) * 1.2]).nice().range([H - margin.bottom, margin.top]);
@@ -723,7 +728,7 @@ function updateAll(salary) {
   const salaryStateData = withSalary(STATE_DATA, salary);
   const salaryCountyData = withSalary(COUNTY_DATA, salary);
 
-  d3.select("#salaryValue").text(salary >= 150000 ? "$150,000+" : formatDollar(salary));
+  d3.select("#salaryValue").text(salary >= 300000 ? "$300,000+" : formatDollar(salary));
   updateStats(salaryStateData, salaryCountyData, salary);
   drawSalaryMap(salaryStateData, salaryCountyData, salary);
   drawIncomeLadder(salary);
@@ -750,7 +755,7 @@ async function animateSalary() {
   userHasSetSalary = true;
   const button = document.getElementById("playSalaryButton");
   button.textContent = "Animating...";
-  const steps = Array.from({ length: (150000 - 30000) / 5000 + 1 }, (_, i) => 30000 + i * 5000);
+  const steps = Array.from({ length: (300000 - 30000) / 5000 + 1 }, (_, i) => 30000 + i * 5000);
   for (const salary of steps) {
     setSalary(salary, true, true);
     await new Promise(resolve => setTimeout(resolve, 400));
