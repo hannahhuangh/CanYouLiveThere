@@ -1,10 +1,10 @@
-const ZIP_FILE = "./datasets/rent_income_zip_clean.csv";
+const COUNTY_FILE = "./datasets/rent_income_county_clean.csv";
 const STATE_FILE = "./datasets/rent_income_state_clean.csv";
 const US_ATLAS_TOPO = "https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json";
 
 const tooltip = d3.select("#tooltip");
 
-let ZIP_DATA = [];
+let ZIP_DATA = []; // kept only so older helper code does not break; map uses county/state files
 let STATE_DATA = [];
 let COUNTY_DATA = [];
 let US_STATES = null;
@@ -14,6 +14,9 @@ let selectedCountyIds = [];
 let isAnimatingSalary = false;
 
 let userHasSetSalary = false;
+let storyAutoAnimated = false;
+let storySalary = 85000;
+let isExplorationMode = false;
 
 const stateToFips = {
   "AL":"01","AK":"02","AZ":"04","AR":"05","CA":"06","CO":"08","CT":"09","DE":"10","DC":"11",
@@ -36,11 +39,6 @@ function formatDollar(x) {
 function formatPercent(x) {
   if (!isFinite(x)) return "—";
   return d3.format(".1f")(x) + "%";
-}
-
-function getHouseholdMultiplier() {
-  const sel = document.getElementById("householdSelect");
-  return sel ? parseFloat(sel.value) : 1.0;
 }
 
 function categoryFromBurden(burden) {
@@ -72,45 +70,63 @@ function normalizeCountyName(name) {
 }
 
 function chartFrame(id, customHeight = 560) {
-  const parent = document.getElementById(id).parentElement;
-  const W = Math.max(320, parent.clientWidth - 48);
-  const H = customHeight;
-  const svg = d3.select("#" + id).attr("height", H).html("");
+  const el = document.getElementById(id);
+  const parent = el.parentElement;
+  const parentBox = parent.getBoundingClientRect();
+  const styles = window.getComputedStyle(parent);
+  const padX = (parseFloat(styles.paddingLeft) || 0) + (parseFloat(styles.paddingRight) || 0);
+
+  // Measure the real drawable width after the story text shifts and the visual card appears.
+  // This fixes the oversized/cut-off charts that happened when SVGs were drawn before
+  // the final two-column layout settled.
+  let W = Math.max(300, Math.floor((parentBox.width || parent.clientWidth || 360) - padX));
+
+  // Chapter 4 is drawn while the visual card is transitioning in the scrollytelling
+  // layout, so the first measurement can come back too small. Give this chart a
+  // stable wide canvas so it matches the Chapter 3 comparison chart instead of
+  // squeezing into a tiny centered plot.
+  if (id === "jobComparisonChart" && !document.body.classList.contains("exploration-unlocked")) {
+    const cardBox = el.closest(".visual-card")?.getBoundingClientRect();
+    const chapterBox = el.closest(".guided-chapter")?.getBoundingClientRect();
+    const cardWidth = cardBox?.width || 0;
+    const chapterVisualWidth = chapterBox?.width ? chapterBox.width * 0.66 : 0;
+    const viewportVisualWidth = window.innerWidth * 0.58;
+    W = Math.max(W, Math.floor(cardWidth - padX), Math.floor(chapterVisualWidth), Math.floor(viewportVisualWidth), 860);
+    W = Math.min(W, 1180);
+  }
+
+  const guided = !document.body.classList.contains("exploration-unlocked");
+  const guidedHeights = {
+    mapChart: 410,
+    ladderChart: 270,
+    comparisonChart: 260,
+    jobComparisonChart: 360,
+    dreamChart: 210,
+    recMapChart: 280
+  };
+  const explorationHeights = {
+    mapChart: 430,
+    ladderChart: 285,
+    comparisonChart: 260,
+    jobComparisonChart: 340,
+    dreamChart: 210,
+    recMapChart: 300
+  };
+  const preferredHeight = (guided ? guidedHeights[id] : explorationHeights[id]) || customHeight;
+  const viewportLimit = Math.max(260, window.innerHeight - (guided ? 260 : 220));
+  const H = Math.max(id === "jobComparisonChart" ? 320 : 200, Math.min(preferredHeight, viewportLimit));
+
+  const svg = d3.select("#" + id)
+    .attr("width", W)
+    .attr("height", H)
+    .attr("viewBox", `0 0 ${W} ${H}`)
+    .attr("preserveAspectRatio", "xMidYMid meet")
+    .html("");
   return { svg, W, H };
 }
 
-function cleanData(zipData, stateData, countyFeatures) {
-  const countyNameToFips = new Map();
-
-  countyFeatures.forEach(feature => {
-    const fips = String(feature.id).padStart(5, "0");
-    const state = fipsToState[fips.slice(0, 2)];
-    const countyName = feature.properties && feature.properties.name;
-    if (!state || !countyName) return;
-    countyNameToFips.set(`${state}|${normalizeCountyName(countyName)}`, fips);
-  });
-
-  zipData.forEach(d => {
-    d.zip = String(d.zip).padStart(5, "0");
-    d.city = d.city || "Unknown";
-    d.state = d.state || "Unknown";
-    d.county = d.county || "Unknown County";
-    d.monthly_rent = +d.monthly_rent;
-    d.num_returns = +d.num_returns || 0;
-    d.avg_annual_income = +d.avg_annual_income;
-    d.avg_monthly_income = +d.avg_monthly_income;
-    d.local_rent_burden = +d.rent_burden;
-    d.local_rent_burden_percent = +d.rent_burden_percent;
-    d.required_income = d.monthly_rent * 12 / 0.30;
-  });
-
-  zipData = zipData.filter(d =>
-    isFinite(d.monthly_rent) &&
-    isFinite(d.avg_annual_income) &&
-    isFinite(d.required_income) &&
-    d.monthly_rent > 0 &&
-    d.avg_annual_income > 0
-  );
+function cleanData(countyData, stateData, countyFeatures) {
+  const validCountyFips = new Set(countyFeatures.map(feature => String(feature.id).padStart(5, "0")));
 
   stateData.forEach(d => {
     d.avg_monthly_rent = +d.avg_monthly_rent;
@@ -118,7 +134,7 @@ function cleanData(zipData, stateData, countyFeatures) {
     d.avg_monthly_income = +d.avg_monthly_income;
     d.local_rent_burden = +d.avg_rent_burden;
     d.local_rent_burden_percent = +d.rent_burden_percent;
-    d.zip_count = +d.zip_count;
+    d.zip_count = +d.zip_count || 0;
     d.fips = stateToFips[d.state];
     d.required_income = d.avg_monthly_rent * 12 / 0.30;
   });
@@ -131,41 +147,36 @@ function cleanData(zipData, stateData, countyFeatures) {
     d.avg_annual_income > 0
   );
 
-  const countyRollup = d3.rollups(
-    zipData,
-    rows => {
-      const totalReturns = d3.sum(rows, r => r.num_returns || 0);
-      const weightedRent = totalReturns > 0
-        ? d3.sum(rows, r => r.monthly_rent * (r.num_returns || 0)) / totalReturns
-        : d3.mean(rows, r => r.monthly_rent);
-      const weightedIncome = totalReturns > 0
-        ? d3.sum(rows, r => r.avg_annual_income * (r.num_returns || 0)) / totalReturns
-        : d3.mean(rows, r => r.avg_annual_income);
-      const fips = countyNameToFips.get(`${rows[0].state}|${normalizeCountyName(rows[0].county)}`);
+  countyData.forEach(d => {
+    d.fips = String(d.fips || "").padStart(5, "0");
+    d.state = d.state || fipsToState[d.fips.slice(0, 2)] || "Unknown";
+    d.county = d.county || "Unknown County";
+    d.avg_monthly_rent = +d.avg_monthly_rent;
+    d.avg_annual_income = +d.avg_annual_income;
+    d.avg_monthly_income = +d.avg_monthly_income;
+    d.local_rent_burden = +d.avg_rent_burden;
+    d.local_rent_burden_percent = +d.rent_burden_percent;
+    d.zip_count = +d.zip_count || +d.county_count || 1;
+    d.required_income = isFinite(+d.required_income)
+      ? +d.required_income
+      : d.avg_monthly_rent * 12 / 0.30;
+    d.label = `${d.county}, ${d.state}`;
+  });
 
-      return {
-        id: fips,
-        state: rows[0].state,
-        county: rows[0].county,
-        fips,
-        label: `${rows[0].county}, ${rows[0].state}`,
-        avg_monthly_rent: weightedRent,
-        avg_annual_income: weightedIncome,
-        zip_count: rows.length,
-        required_income: weightedRent * 12 / 0.30
-      };
-    },
-    d => `${d.state}|${normalizeCountyName(d.county)}`
-  ).map(d => d[1]).filter(d => d.fips && isFinite(d.avg_monthly_rent));
+  countyData = countyData.filter(d =>
+    validCountyFips.has(d.fips) &&
+    isFinite(d.avg_monthly_rent) &&
+    d.avg_monthly_rent > 0 &&
+    isFinite(d.required_income)
+  );
 
-  return { zipData, stateData, countyData: countyRollup };
+  return { zipData: [], stateData, countyData };
 }
 
 function withSalary(rows, salary) {
-  const multiplier = getHouseholdMultiplier();
   const monthlyIncome = salary / 12;
   return rows.map(d => {
-    const rent = (d.avg_monthly_rent || d.monthly_rent) * multiplier;
+    const rent = d.avg_monthly_rent || d.monthly_rent;
     const burden = rent / monthlyIncome;
     return {
       ...d,
@@ -178,13 +189,13 @@ function withSalary(rows, salary) {
 }
 
 function setSalary(value, shouldUpdate = true, fromUser = false) {
-  const salary = Math.max(30000, Math.min(300000, Math.round(value / 5000) * 5000));
+  const salary = Math.max(30000, Math.min(150000, Math.round(value / 5000) * 5000));
 
-  if (!fromUser && userHasSetSalary) return;
-  if (fromUser) userHasSetSalary = true;
+  if (fromUser && isExplorationMode) userHasSetSalary = true;
 
-  document.getElementById("salarySlider").value = salary;
-  d3.select("#salaryValue").text(salary >= 300000 ? "$300,000+" : formatDollar(salary));
+  const slider = document.getElementById("salarySlider");
+  if (slider) slider.value = salary;
+  d3.select("#salaryValue").text(salary >= 150000 ? "$150,000+" : formatDollar(salary));
   if (shouldUpdate) updateAll(salary);
 }
 
@@ -233,6 +244,7 @@ function drawSalaryMap(stateData, countyData, salary) {
       })
       .attr("opacity", d => stateByFips.has(String(d.id).padStart(2, "0")) ? 0.95 : 0.35)
       .on("click", (event, d) => {
+        if (!isExplorationMode) return;
         const abbr = fipsToState[String(d.id).padStart(2, "0")];
         if (!abbr) return;
         selectedMapState = abbr;
@@ -249,14 +261,14 @@ function drawSalaryMap(stateData, countyData, salary) {
           .style("top", event.clientY + 14 + "px")
           .html(`
             <strong>${row.state}</strong><br>
-            Click to zoom into counties<br>
+            ${isExplorationMode ? "Click to zoom into counties<br>" : "Guided national view<br>"}
             Selected income: ${formatDollar(salary)}<br>
             Monthly income: ${formatDollar(salary / 12)}/mo<br>
             Avg monthly rent: ${formatDollar(row.avg_monthly_rent)}<br>
             Rent burden: ${formatPercent(row.salary_rent_burden_percent)}<br>
             Category: ${row.salary_category}<br>
             Required income: ${formatDollar(row.required_income)}<br>
-            ZIPs included: ${row.zip_count}
+            Counties included: ${row.zip_count}
           `);
       })
       .on("mouseleave", () => tooltip.style("opacity", 0));
@@ -277,6 +289,7 @@ function drawSalaryMap(stateData, countyData, salary) {
     })
     .attr("opacity", d => countyByFips.has(String(d.id).padStart(5, "0")) ? 0.95 : 0.28)
     .on("click", (event, d) => {
+      if (!isExplorationMode) return;
       const fips = String(d.id).padStart(5, "0");
       const row = countyByFips.get(fips);
       if (!row) return;
@@ -296,7 +309,7 @@ function drawSalaryMap(stateData, countyData, salary) {
         .style("top", event.clientY + 14 + "px")
         .html(`
           <strong>${row.county}, ${row.state}</strong><br>
-          Click to add to comparison & set dream county<br>
+          ${isExplorationMode ? "Click to add to comparison & set dream county<br>" : "County detail<br>"}
           Selected income: ${formatDollar(salary)}<br>
           Monthly income: ${formatDollar(salary / 12)}/mo<br>
           Avg monthly rent: ${formatDollar(row.avg_monthly_rent)}<br>
@@ -353,16 +366,22 @@ function drawIncomeLadder(currentSalary) {
     .attr("transform", `translate(${margin.left},0)`)
     .call(d3.axisLeft(y).ticks(5).tickFormat(d3.format(".0%")));
 
-  svg.selectAll("rect")
+  const bars = svg.selectAll("rect")
     .data(data)
     .enter()
     .append("rect")
     .attr("x", d => x(d.income))
-    .attr("y", d => y(d.share))
+    .attr("y", y(0))
     .attr("width", x.bandwidth())
-    .attr("height", d => y(0) - y(d.share))
+    .attr("height", 0)
     .attr("fill", "#65c7ff")
     .attr("opacity", 0.75);
+
+  bars.transition()
+    .duration(isAnimatingSalary ? 850 : 450)
+    .ease(d3.easeCubicOut)
+    .attr("y", d => y(d.share))
+    .attr("height", d => y(0) - y(d.share));
 
   svg.selectAll("text.value")
     .data(data)
@@ -391,9 +410,13 @@ function drawIncomeLadder(currentSalary) {
       .attr("stroke", "#ffb84d").attr("stroke-width", 1.5)
       .attr("stroke-dasharray", "4,3").attr("opacity", 0.75);
 
-    svg.append("circle")
-      .attr("cx", markerX).attr("cy", markerY).attr("r", 6)
+    const marker = svg.append("circle")
+      .attr("cx", markerX).attr("cy", markerY).attr("r", 0)
       .attr("fill", "#ffb84d").attr("stroke", "#050711").attr("stroke-width", 1.5);
+
+    marker.transition()
+      .duration(isAnimatingSalary ? 650 : 350)
+      .attr("r", 6);
 
     const labelY = Math.max(18, markerY - 55);
 
@@ -423,6 +446,55 @@ function countyLabel(d) {
   return `${d.county}, ${d.state}`;
 }
 
+function currentDreamId() {
+  return document.getElementById("introDreamSelect")?.value
+      || document.getElementById("dreamSelect")?.value
+      || selectedCountyIds[0];
+}
+
+function philadelphiaCounty() {
+  return COUNTY_DATA.find(d => d.state === "PA" && normalizeCountyName(d.county).includes("philadelphia"));
+}
+
+function guidedComparisonPair() {
+  const dream = COUNTY_DATA.find(d => d.fips === currentDreamId())
+    || COUNTY_DATA.find(d => d.state === "CA" && normalizeCountyName(d.county).includes("san diego"))
+    || COUNTY_DATA[0];
+  const philly = philadelphiaCounty()
+    || COUNTY_DATA.find(d => d.state === "PA")
+    || COUNTY_DATA.find(d => d.fips !== dream?.fips)
+    || COUNTY_DATA[1];
+  return [dream, philly].filter(Boolean);
+}
+
+function dreamOfferSalary() {
+  // Guided story Chapter 4: compare two concrete job offers.
+  return 85000;
+}
+
+function lowerPhillyOfferSalary() {
+  // Philadelphia offer is intentionally lower than the dream-county offer.
+  return 70000;
+}
+
+function syncDreamControls(fips) {
+  const row = COUNTY_DATA.find(d => d.fips === fips);
+  if (!row) return;
+  ["#introDreamSelect", "#dreamSelect", "#jobCountyA"].forEach(id => {
+    const sel = d3.select(id);
+    if (!sel.empty()) sel.property("value", row.fips);
+  });
+  d3.select("#dreamChoiceNote").text(`Dream county: ${countyLabel(row)}`);
+  d3.select("#dreamCountyInline").text(countyLabel(row));
+  const philly = philadelphiaCounty();
+  selectedCountyIds = [row.fips, philly?.fips || selectedCountyIds[1] || row.fips];
+  syncComparisonDropdowns();
+  if (philly?.fips) {
+    d3.select("#jobCountyB").property("value", philly.fips);
+    d3.select("#compareB").property("value", philly.fips);
+  }
+}
+
 function populateDropdowns() {
   const states = Array.from(new Set(STATE_DATA.map(d => d.state))).sort();
   const stateSelect = d3.select("#stateSelect");
@@ -442,24 +514,26 @@ function populateDropdowns() {
   }
 
   const countyOptions = COUNTY_DATA.slice().sort((a, b) => d3.ascending(countyLabel(a), countyLabel(b)));
-  ["#compareA", "#compareB", "#dreamSelect", "#jobCountyA", "#jobCountyB"].forEach(id => {
-    const select = d3.select(id).html("");
+  ["#compareA", "#compareB", "#dreamSelect", "#introDreamSelect", "#jobCountyA", "#jobCountyB"].forEach(id => {
+    const select = d3.select(id);
+    if (select.empty()) return;
+    select.html("");
     select.selectAll("option")
       .data(countyOptions).enter().append("option")
       .attr("value", d => d.fips).text(d => countyLabel(d));
   });
 
   const caSanDiego = COUNTY_DATA.find(d => d.state === "CA" && normalizeCountyName(d.county).includes("san diego"));
-  const midwest = COUNTY_DATA.find(d => ["OH", "MI", "IN", "PA"].includes(d.state));
-  selectedCountyIds = [caSanDiego?.fips, midwest?.fips].filter(Boolean);
+  const philly = philadelphiaCounty();
+  selectedCountyIds = [caSanDiego?.fips, philly?.fips].filter(Boolean);
   if (selectedCountyIds.length < 2) selectedCountyIds = countyOptions.slice(0, 2).map(d => d.fips);
   syncComparisonDropdowns();
-  d3.select("#dreamSelect").property("value", selectedCountyIds[0]);
+  if (selectedCountyIds[0]) syncDreamControls(selectedCountyIds[0]);
 
   if (selectedCountyIds[0]) d3.select("#jobCountyA").property("value", selectedCountyIds[0]);
   if (selectedCountyIds[1]) d3.select("#jobCountyB").property("value", selectedCountyIds[1]);
 
-  const salaryOptions = Array.from({ length: (300000 - 30000) / 5000 + 1 }, (_, i) => 30000 + i * 5000);
+  const salaryOptions = Array.from({ length: (150000 - 30000) / 5000 + 1 }, (_, i) => 30000 + i * 5000);
   ["#jobSalaryA", "#jobSalaryB"].forEach((id, idx) => {
     const sel = d3.select(id).html("");
     salaryOptions.forEach(s => sel.append("option").attr("value", s).text(formatDollar(s)));
@@ -473,7 +547,13 @@ function syncComparisonDropdowns() {
 }
 
 function drawComparison(salary) {
-  selectedCountyIds = [document.getElementById("compareA").value, document.getElementById("compareB").value];
+  if (!isExplorationMode) {
+    const pair = guidedComparisonPair();
+    selectedCountyIds = pair.map(d => d.fips);
+    syncComparisonDropdowns();
+  } else {
+    selectedCountyIds = [document.getElementById("compareA").value, document.getElementById("compareB").value];
+  }
   const rows = selectedCountyIds.map(id => COUNTY_DATA.find(d => d.fips === id)).filter(Boolean);
   const salaryRows = withSalary(rows, salary);
 
@@ -514,9 +594,27 @@ function drawComparison(salary) {
     .attr("height", d => y(0) - y(d.salary_rent_burden_percent))
     .attr("fill", d => burdenColor(d.salary_rent_burden))
     .attr("opacity", 0.9);
+
+  // Match Chapter 4: show the exact rent-burden percentage above each bar.
+  svg.selectAll(".bar-value").data(salaryRows).enter().append("text")
+    .attr("class", "bar-value")
+    .attr("x", d => x(countyLabel(d)) + x.bandwidth() / 2)
+    .attr("y", d => y(d.salary_rent_burden_percent) - 8)
+    .attr("text-anchor", "middle")
+    .attr("fill", "var(--ink)")
+    .attr("font-weight", "800")
+    .attr("font-size", "13px")
+    .text(d => formatPercent(d.salary_rent_burden_percent));
 }
 
 function drawJobComparison() {
+  if (!isExplorationMode) {
+    const pair = guidedComparisonPair();
+    if (pair[0]) d3.select("#jobCountyA").property("value", pair[0].fips);
+    if (pair[1]) d3.select("#jobCountyB").property("value", pair[1].fips);
+    d3.select("#jobSalaryA").property("value", dreamOfferSalary());
+    d3.select("#jobSalaryB").property("value", lowerPhillyOfferSalary());
+  }
   const countyAId = document.getElementById("jobCountyA").value;
   const countyBId = document.getElementById("jobCountyB").value;
   const salaryA = Math.max(0, +document.getElementById("jobSalaryA").value || 0);
@@ -527,28 +625,24 @@ function drawJobComparison() {
   if (!rowA || !rowB) return;
 
   const enrich = (row, salary) => {
-    const multiplier = getHouseholdMultiplier();
-    const adjustedRent = row.avg_monthly_rent * multiplier;
-    const burden = salary > 0 ? adjustedRent / (salary / 12) : Infinity;
+    const rent = row.avg_monthly_rent;
+    const burden = salary > 0 ? rent / (salary / 12) : Infinity;
     return {
       ...row,
       job_salary: salary,
       salary_rent_burden: burden,
       salary_rent_burden_percent: burden * 100,
       salary_category: categoryFromBurden(burden),
-      required_income: adjustedRent * 12 / 0.30
+      required_income: rent * 12 / 0.30
     };
   };
 
   const salaryRows = [enrich(rowA, salaryA), enrich(rowB, salaryB)];
-  const labels = [
-    `${countyLabel(rowA)}\n($${(salaryA/1000).toFixed(0)}k)`,
-    `${countyLabel(rowB)}\n($${(salaryB/1000).toFixed(0)}k)`
-  ];
+  const labels = salaryRows.map(countyLabel);
 
   const cards = d3.select("#jobComparisonCards").html("");
-  cards.selectAll("div").data(salaryRows).enter().append("div").attr("class", "place-card")
-    .html((d, i) => `
+  cards.selectAll("div").data(salaryRows).enter().append("div").attr("class", "place-card offer-card")
+    .html(d => `
       <h4>${countyLabel(d)}</h4>
       <p>Salary: ${formatDollar(d.job_salary)}/yr</p>
       <p>Rent: ${formatDollar(d.avg_monthly_rent)} / month</p>
@@ -557,25 +651,18 @@ function drawJobComparison() {
       <p>Category: ${d.salary_category}</p>
     `);
 
-  const { svg, W, H } = chartFrame("jobComparisonChart", 260);
-  const margin = { top: 24, right: 20, bottom: 65, left: 48 };
-  const x = d3.scaleBand().domain(labels).range([margin.left, W - margin.right]).padding(0.35);
+  const { svg, W, H } = chartFrame("jobComparisonChart", 430);
+  const margin = { top: 34, right: 76, bottom: 72, left: 64 };
+  const x = d3.scaleBand().domain(labels).range([margin.left, W - margin.right]).padding(0.42);
   const yMax = Math.max(60, d3.max(salaryRows, d => isFinite(d.salary_rent_burden_percent) ? d.salary_rent_burden_percent : 0) * 1.2);
   const y = d3.scaleLinear().domain([0, yMax]).nice().range([H - margin.bottom, margin.top]);
 
   svg.append("g").attr("class", "axis").attr("transform", `translate(0,${H - margin.bottom})`)
-    .call(d3.axisBottom(x).tickFormat(d => d.split("\n")[0]))
-    .selectAll("text").attr("transform", "rotate(-12)").style("text-anchor", "end");
-
-  labels.forEach((lbl) => {
-    const parts = lbl.split("\n");
-    const xPos = x(lbl) + x.bandwidth() / 2;
-    svg.append("text").attr("class", "axis-label")
-      .attr("x", xPos).attr("y", H - margin.bottom + 38)
-      .attr("text-anchor", "middle")
-      .style("font-size", "9px").style("fill", "var(--teal2)")
-      .text(parts[1]);
-  });
+    .call(d3.axisBottom(x))
+    .selectAll("text")
+    .attr("transform", "rotate(-12)")
+    .style("text-anchor", "end")
+    .style("font-size", "12px");
 
   svg.append("g").attr("class", "axis").attr("transform", `translate(${margin.left},0)`)
     .call(d3.axisLeft(y).ticks(5).tickFormat(d => d + "%"));
@@ -597,27 +684,35 @@ function drawJobComparison() {
       return y(0) - y(val);
     })
     .attr("fill", d => isFinite(d.salary_rent_burden) ? burdenColor(d.salary_rent_burden) : "#c0302a")
-    .attr("opacity", 0.9);
+    .attr("opacity", 0.88);
+
+  svg.selectAll(".bar-value").data(salaryRows).enter().append("text")
+    .attr("class", "bar-value")
+    .attr("x", (d, i) => x(labels[i]) + x.bandwidth() / 2)
+    .attr("y", d => y(Math.min(isFinite(d.salary_rent_burden_percent) ? d.salary_rent_burden_percent : yMax, yMax)) - 8)
+    .attr("text-anchor", "middle")
+    .attr("fill", "var(--ink)")
+    .attr("font-weight", "800")
+    .attr("font-size", "13px")
+    .text(d => formatPercent(d.salary_rent_burden_percent));
 }
 
 function drawDreamLocation(salary) {
-  const id = document.getElementById("dreamSelect").value;
+  const id = currentDreamId();
   const row = COUNTY_DATA.find(d => d.fips === id);
   if (!row) return;
 
-  const multiplier = getHouseholdMultiplier();
-  const householdLabel = document.getElementById("householdSelect").options[document.getElementById("householdSelect").selectedIndex].text;
-  const adjustedRequired = row.required_income * multiplier;
-  const burden = (row.avg_monthly_rent * multiplier) / (salary / 12);
+  const requiredIncome = row.required_income;
+  const burden = row.avg_monthly_rent / (salary / 12);
   d3.select("#dreamTitle").text(countyLabel(row));
-  d3.select("#dreamRequiredIncome").text(formatDollar(adjustedRequired));
-  d3.select("#dreamDetails").text(`At ${formatDollar(salary)} for a ${householdLabel}, housing would take ${formatPercent(burden * 100)} of income. The 30% rule requires about ${formatDollar(adjustedRequired)}/yr.`);
+  d3.select("#dreamRequiredIncome").text(formatDollar(requiredIncome));
+  d3.select("#dreamDetails").text(`At ${formatDollar(salary)}, housing would take ${formatPercent(burden * 100)} of income. The 30% rule requires about ${formatDollar(requiredIncome)}/yr.`);
 
   const { svg, W, H } = chartFrame("dreamChart", 210);
   const margin = { top: 25, right: 20, bottom: 35, left: 36 };
   const data = [
     { label: "Your salary", value: salary },
-    { label: "Needed", value: adjustedRequired }
+    { label: "Needed", value: requiredIncome }
   ];
   const x = d3.scaleBand().domain(data.map(d => d.label)).range([margin.left, W - margin.right]).padding(0.35);
   const y = d3.scaleLinear().domain([0, d3.max(data, d => d.value) * 1.2]).nice().range([H - margin.bottom, margin.top]);
@@ -683,9 +778,17 @@ function drawRecMap(matchedRows) {
   if (!el) return;
 
   const parent = el.parentElement;
-  const W = Math.max(280, parent.clientWidth - 8);
-  const H = 320;
-  const svg = d3.select("#recMapChart").attr("height", H).attr("width", W).html("");
+  const parentBox = parent.getBoundingClientRect();
+  const styles = window.getComputedStyle(parent);
+  const padX = (parseFloat(styles.paddingLeft) || 0) + (parseFloat(styles.paddingRight) || 0);
+  const W = Math.max(280, Math.floor((parentBox.width || parent.clientWidth || 320) - padX));
+  const H = document.body.classList.contains("exploration-unlocked") ? 300 : 280;
+  const svg = d3.select("#recMapChart")
+    .attr("height", H)
+    .attr("width", W)
+    .attr("viewBox", `0 0 ${W} ${H}`)
+    .attr("preserveAspectRatio", "xMidYMid meet")
+    .html("");
 
   const matchedFips = new Set(matchedRows.map(d => d.fips));
 
@@ -728,25 +831,262 @@ function updateAll(salary) {
   const salaryStateData = withSalary(STATE_DATA, salary);
   const salaryCountyData = withSalary(COUNTY_DATA, salary);
 
-  d3.select("#salaryValue").text(salary >= 300000 ? "$300,000+" : formatDollar(salary));
+  d3.select("#salaryValue").text(salary >= 150000 ? "$150,000+" : formatDollar(salary));
   updateStats(salaryStateData, salaryCountyData, salary);
   drawSalaryMap(salaryStateData, salaryCountyData, salary);
   drawIncomeLadder(salary);
   drawComparison(salary);
   drawDreamLocation(salary);
   updateRecommendations(salary);
+  updatePersonalSummary(salary);
+}
+
+function updateStorySalaryText() {
+  d3.select("#storySalaryInline").text(storySalary >= 150000 ? "$150,000+" : formatDollar(storySalary));
+  d3.select("#salaryChoiceNote").text(`Selected story salary: ${storySalary >= 150000 ? "$150,000+" : formatDollar(storySalary)}`);
+  d3.select("#summarySalary").text(storySalary >= 150000 ? "$150,000+" : formatDollar(storySalary));
+}
+
+function storyCareerSalary() {
+  return Math.min(150000, Math.max(storySalary + 25000, Math.round(storySalary * 1.25 / 5000) * 5000));
+}
+
+function salaryForSection(section) {
+  if (!section) return +document.getElementById("salarySlider").value || storySalary;
+  if (section.dataset.useCareerSalary) return storyCareerSalary();
+  if (section.dataset.useStorySalary) return storySalary;
+  const salary = +section.dataset.salary;
+  return salary || storySalary;
+}
+
+function updateGuidedDefaults() {
+  updateStorySalaryText();
+  if (!COUNTY_DATA.length) return;
+  const caSanDiego = COUNTY_DATA.find(d => d.state === "CA" && normalizeCountyName(d.county).includes("san diego"));
+  const dreamId = currentDreamId() || caSanDiego?.fips || selectedCountyIds[0];
+  const dream = COUNTY_DATA.find(d => d.fips === dreamId) || caSanDiego || COUNTY_DATA[0];
+  const philly = philadelphiaCounty() || COUNTY_DATA.find(d => d.state === "PA") || COUNTY_DATA.find(d => d.fips !== dream?.fips);
+
+  selectedCountyIds = [dream?.fips, philly?.fips].filter(Boolean);
+  if (selectedCountyIds.length < 2) selectedCountyIds = COUNTY_DATA.slice(0, 2).map(d => d.fips);
+  syncComparisonDropdowns();
+
+  if (dream?.fips) {
+    syncDreamControls(dream.fips);
+    d3.select("#jobCountyA").property("value", dream.fips);
+  }
+  if (philly?.fips) {
+    d3.select("#jobCountyB").property("value", philly.fips);
+    d3.select("#compareB").property("value", philly.fips);
+  }
+  d3.select("#jobSalaryA").property("value", dreamOfferSalary());
+  d3.select("#jobSalaryB").property("value", lowerPhillyOfferSalary());
+  drawJobComparison();
+}
+
+function updatePersonalSummary(salary) {
+  if (!COUNTY_DATA.length) return;
+  const salaryRows = withSalary(COUNTY_DATA, salary);
+  const affordableCount = salaryRows.filter(d => d.salary_rent_burden <= 0.30).length;
+  const share = affordableCount / salaryRows.length;
+  d3.select("#summarySalary").text(salary >= 150000 ? "$150,000+" : formatDollar(salary));
+  d3.select("#summaryAffordableShare").text(`${d3.format(".0%")(share)} (${affordableCount} counties)`);
+
+  const dreamId = currentDreamId();
+  const dream = COUNTY_DATA.find(d => d.fips === dreamId);
+  if (dream) {
+    const gap = dream.required_income - salary;
+    const text = gap <= 0 ? `${formatDollar(Math.abs(gap))} under budget` : `${formatDollar(gap)} more needed`;
+    d3.select("#summaryDreamGap").text(text);
+  }
+}
+
+function enterExplorationMode() {
+  isExplorationMode = true;
+  userHasSetSalary = true;
+  document.body.classList.add("exploration-unlocked");
+  document.body.classList.remove("exploration-ready");
+  const badge = document.getElementById("modeBadge");
+  if (badge) badge.textContent = "Full exploration mode";
+  setSalary(storySalary, true, true);
+  redrawAfterLayoutShift(120);
+  redrawAfterLayoutShift(520);
+  setTimeout(() => document.getElementById("chapter1")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+}
+
+function setupStoryReveals() {
+  const selectors = [
+    '.story-copy .eyebrow', '.story-copy h2', '.story-copy > p', '.story-question', '.formula-card',
+    '.chapter-text .eyebrow', '.chapter-text h2', '.chapter-text > p', '.chapter-prompt', '.use-note',
+    '.stat-grid', '.salary-buttons', '.mini-controls', '.pref-section',
+    '.visual-card > h3', '.dream-card .big-number', '.dream-card > p', '.story-action-button',
+    '.takeaway-card', '.reflection-copy .eyebrow', '.reflection-copy h2', '.reflection-copy p',
+    '.story-setup-panel', '.salary-choice', '.intro-dream-control', '.personal-summary-card', '.explore-button', '.explore-checklist div'
+  ].join(', ');
+
+  document.querySelectorAll('.story-section, .chapter').forEach(section => {
+    let index = 0;
+    section.querySelectorAll(selectors).forEach(el => {
+      if (el.classList.contains('story-reveal')) return;
+      el.classList.add('story-reveal');
+      el.style.setProperty('--reveal-index', index++);
+    });
+  });
+}
+
+let visualRevealTimer = null;
+
+function updateStoryChrome(activeSection) {
+  document.querySelectorAll(".story-section.is-active, .chapter.is-active").forEach(section => {
+    section.classList.remove("is-active");
+  });
+  activeSection.classList.add("is-active", "reveal-done");
+  if (activeSection.classList.contains("visual-shown")) {
+    activeSection.classList.add("visual-ready");
+  }
+
+  clearTimeout(visualRevealTimer);
+  // In guided mode, visuals do not appear automatically anymore.
+  // The reader controls the pacing with the Show visual / Next button so they have time to read.
+  if (!activeSection.classList.contains("guided-chapter") || isExplorationMode) {
+    visualRevealTimer = setTimeout(() => activeSection.classList.add("visual-ready", "visual-shown"), 250);
+  }
+  updateStoryActionButtons(activeSection);
+  const step = activeSection.dataset.storyStep;
+  document.querySelectorAll(".story-progress a").forEach(link => link.classList.remove("active"));
+
+  if (activeSection.id) {
+    const direct = document.querySelector(`.story-progress a[href="#${activeSection.id}"]`);
+    if (direct) direct.classList.add("active");
+  }
+
+  const badge = document.getElementById("modeBadge");
+  if (badge) {
+    if (isExplorationMode) badge.textContent = "Full exploration mode";
+    else if (activeSection.dataset.unlockExploration) badge.textContent = "Ready for exploration";
+    else badge.textContent = `Guided story mode${step ? " · Step " + step : ""}`;
+  }
+
+  document.body.classList.toggle("exploration-ready", !!activeSection.dataset.unlockExploration && !isExplorationMode);
+}
+
+let storyLadderStepIndex = 0;
+const storyLadderSteps = () => {
+  const base = Math.max(30000, Math.round(storySalary / 5000) * 5000);
+  return Array.from(new Set([base, Math.min(150000, base + 15000), storyCareerSalary(), 150000]));
+};
+
+function setupStoryLadderControls() {
+  const box = document.getElementById("storyLadderControls");
+  if (!box || box.dataset.ready) return;
+  box.dataset.ready = "true";
+  const back = box.querySelector("[data-ladder='back']");
+  const next = box.querySelector("[data-ladder='next']");
+  const reset = box.querySelector("[data-ladder='reset']");
+  if (back) back.addEventListener("click", () => stepStoryLadder(-1));
+  if (next) next.addEventListener("click", () => stepStoryLadder(1));
+  if (reset) reset.addEventListener("click", () => { storyLadderStepIndex = 0; applyStoryLadderStep(); });
+}
+
+function applyStoryLadderStep() {
+  const steps = storyLadderSteps();
+  storyLadderStepIndex = Math.max(0, Math.min(storyLadderStepIndex, steps.length - 1));
+  const salary = steps[storyLadderStepIndex];
+  const status = document.getElementById("incomeAnimationStatus");
+  if (status) {
+    status.classList.remove("is-animating");
+    status.textContent = `Step ${storyLadderStepIndex + 1} of ${steps.length}: income is ${salary >= 150000 ? "$150,000+" : formatDollar(salary)}.`;
+  }
+  const box = document.getElementById("storyLadderControls");
+  if (box) {
+    const back = box.querySelector("[data-ladder='back']");
+    const next = box.querySelector("[data-ladder='next']");
+    if (back) back.disabled = storyLadderStepIndex === 0;
+    if (next) next.disabled = storyLadderStepIndex === steps.length - 1;
+  }
+  setSalary(salary, true, false);
+}
+
+function stepStoryLadder(direction) {
+  storyLadderStepIndex += direction;
+  applyStoryLadderStep();
+}
+
+const visualButtonLabels = {
+  chapter1: "Show map",
+  chapter2: "Show income ladder",
+  chapter3: "Show comparison",
+  chapter4: "Show salary comparison",
+  chapter5: "Show dream county result",
+  chapter6: "Show recommendations"
+};
+
+function redrawAfterLayoutShift(delay = 120) {
+  window.setTimeout(() => {
+    const slider = document.getElementById("salarySlider");
+    const salary = slider ? +slider.value : storySalary;
+    updateAll(salary);
+  }, delay);
+}
+
+function setupGuidedActionButtons() {
+  document.querySelectorAll(".guided-chapter").forEach(section => {
+    const text = section.querySelector(".chapter-text");
+    if (!text || text.querySelector(".story-action-button")) return;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "story-action-button guided-copy";
+    btn.textContent = visualButtonLabels[section.id] || "Show visual";
+    btn.addEventListener("click", () => handleStoryAction(section));
+    text.appendChild(btn);
+  });
+}
+
+function updateStoryActionButtons(activeSection) {
+  document.querySelectorAll(".story-action-button").forEach(btn => {
+    const section = btn.closest(".guided-chapter");
+    if (!section) return;
+    btn.textContent = visualButtonLabels[section.id] || "Show visual";
+    btn.disabled = section.classList.contains("visual-ready");
+    btn.hidden = section.classList.contains("visual-ready");
+  });
+}
+
+function nextStorySection(section) {
+  const sections = Array.from(document.querySelectorAll("#charts > .chapter, #charts > .story-section"));
+  const idx = sections.indexOf(section);
+  return idx >= 0 ? sections[idx + 1] : null;
+}
+
+function handleStoryAction(section) {
+  if (isExplorationMode) return;
+  if (!section.classList.contains("visual-ready")) {
+    section.classList.add("visual-ready", "visual-shown");
+    const btn = section.querySelector(".story-action-button");
+    if (btn) { btn.hidden = true; btn.disabled = true; }
+    if (section.id === "chapter2") {
+      storyLadderStepIndex = 0;
+      setTimeout(() => { setupStoryLadderControls(); applyStoryLadderStep(); }, 180);
+    }
+    redrawAfterLayoutShift(80);
+    redrawAfterLayoutShift(420);
+  }
 }
 
 function setupScrollStory() {
   const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (!entry.isIntersecting) return;
-      const salary = +entry.target.dataset.salary;
-      if (salary && !isAnimatingSalary) setSalary(salary, true, false);
-    });
-  }, { threshold: 0.55 });
+      updateStoryChrome(entry.target);
 
-  document.querySelectorAll(".chapter[data-salary]").forEach(section => observer.observe(section));
+      const salary = salaryForSection(entry.target);
+      if (salary && !isAnimatingSalary && !isExplorationMode) setSalary(salary, true, false);
+
+      // Chapter 2 animation starts when the reader clicks the visual button.
+    });
+  }, { threshold: 0.32, rootMargin: "-12% 0px -28% 0px" });
+
+  document.querySelectorAll(".story-section, .chapter").forEach(section => observer.observe(section));
 }
 
 async function animateSalary() {
@@ -755,59 +1095,62 @@ async function animateSalary() {
   userHasSetSalary = true;
   const button = document.getElementById("playSalaryButton");
   button.textContent = "Animating...";
-  const steps = Array.from({ length: (300000 - 30000) / 5000 + 1 }, (_, i) => 30000 + i * 5000);
+  const steps = Array.from({ length: (150000 - 30000) / 5000 + 1 }, (_, i) => 30000 + i * 5000);
   for (const salary of steps) {
     setSalary(salary, true, true);
     await new Promise(resolve => setTimeout(resolve, 400));
   }
-  button.textContent = "Animate raise";
+  button.textContent = "Animate income";
   isAnimatingSalary = false;
 }
 
 Promise.all([
-  d3.csv(ZIP_FILE),
+  d3.csv(COUNTY_FILE),
   d3.csv(STATE_FILE),
   d3.json(US_ATLAS_TOPO)
-]).then(([zipRaw, stateRaw, usTopo]) => {
+]).then(([countyRaw, stateRaw, usTopo]) => {
   US_STATES = topojson.feature(usTopo, usTopo.objects.states).features;
   US_COUNTIES = topojson.feature(usTopo, usTopo.objects.counties).features;
 
-  const cleaned = cleanData(zipRaw, stateRaw, US_COUNTIES);
+  const cleaned = cleanData(countyRaw, stateRaw, US_COUNTIES);
   ZIP_DATA = cleaned.zipData;
   STATE_DATA = cleaned.stateData;
   COUNTY_DATA = cleaned.countyData;
 
   populateDropdowns();
+  updateGuidedDefaults();
   document.getElementById("loading").classList.add("hidden");
   document.getElementById("charts").style.display = "block";
 
   const slider = document.getElementById("salarySlider");
   const stateSelect = document.getElementById("stateSelect");
 
-  updateAll(+slider.value);
+  setSalary(storySalary, true, false);
+  setupGuidedActionButtons();
+  document.querySelectorAll(".guided-chapter:not(.visual-shown)").forEach(section => section.classList.remove("visual-ready"));
+  setupStoryReveals();
   setupScrollStory();
   drawJobComparison();
 
-  slider.addEventListener("input", function() { setSalary(+this.value, true, true); });
-
-  const householdSelect = document.getElementById("householdSelect");
-  if (householdSelect) householdSelect.addEventListener("change", () => updateAll(+slider.value));
+  slider.addEventListener("input", function() { if (isExplorationMode) setSalary(+this.value, true, true); });
 
   stateSelect.addEventListener("change", function() {
+    if (!isExplorationMode) return;
     selectedMapState = this.value;
     updateAll(+slider.value);
   });
 
   document.getElementById("resetMapButton").addEventListener("click", function() {
+    if (!isExplorationMode) return;
     stateSelect.value = "ALL";
     selectedMapState = "ALL";
     updateAll(+slider.value);
   });
 
-  document.getElementById("playSalaryButton").addEventListener("click", animateSalary);
+  document.getElementById("playSalaryButton").addEventListener("click", () => { if (isExplorationMode) animateSalary(); });
 
   document.querySelectorAll(".salary-jump").forEach(button => {
-    button.addEventListener("click", () => setSalary(+button.dataset.salary, true, true));
+    button.addEventListener("click", () => { if (isExplorationMode) setSalary(+button.dataset.salary, true, true); });
   });
 
   ["compareA", "compareB"].forEach(id => {
@@ -820,13 +1163,26 @@ Promise.all([
     });
   });
 
+  function handleDreamChange(fips) {
+    syncDreamControls(fips);
+    drawComparison(isExplorationMode ? +slider.value : storySalary);
+    updateGuidedDefaults();
+    drawDreamLocation(isExplorationMode ? +slider.value : storySalary);
+    updatePersonalSummary(isExplorationMode ? +slider.value : storySalary);
+  }
+
   document.getElementById("dreamSelect").addEventListener("change", () => {
-    const fips = document.getElementById("dreamSelect").value;
-    selectedCountyIds = [fips, selectedCountyIds[1] || fips];
-    syncComparisonDropdowns();
-    drawComparison(+slider.value);
-    drawDreamLocation(+slider.value);
+    handleDreamChange(document.getElementById("dreamSelect").value);
   });
+
+  const introDreamSelect = document.getElementById("introDreamSelect");
+  if (introDreamSelect) {
+    introDreamSelect.addEventListener("change", () => {
+      handleDreamChange(introDreamSelect.value);
+      storyAutoAnimated = false;
+      setSalary(storySalary, true, false);
+    });
+  }
 
   ["prefWarm", "prefCoastal", "prefUrban", "prefMidwest", "prefLowRent", "prefBuffer"].forEach(id => {
     const el = document.getElementById(id);
@@ -843,9 +1199,24 @@ Promise.all([
     document.getElementById(id).addEventListener("change", drawJobComparison);
   });
 
+  document.querySelectorAll(".salary-choice").forEach(button => {
+    button.addEventListener("click", () => {
+      storySalary = +button.dataset.salary;
+      storyAutoAnimated = false;
+      storyLadderStepIndex = 0;
+      document.querySelectorAll(".salary-choice").forEach(btn => btn.classList.remove("active"));
+      button.classList.add("active");
+      updateGuidedDefaults();
+      setSalary(storySalary, true, false);
+    });
+  });
+
+  const enterButton = document.getElementById("enterExploreMode");
+  if (enterButton) enterButton.addEventListener("click", enterExplorationMode);
+
   window.addEventListener("resize", () => updateAll(+slider.value));
 }).catch(err => {
   console.error(err);
   document.getElementById("loading").textContent =
-    "Data load failed. Run this with Live Server and make sure ./datasets/rent_income_zip_clean.csv and ./datasets/rent_income_state_clean.csv exist.";
+    "Data load failed. Run this with Live Server and make sure ./datasets/rent_income_county_clean.csv and ./datasets/rent_income_state_clean.csv exist.";
 });
