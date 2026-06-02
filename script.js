@@ -38,6 +38,11 @@ function formatPercent(x) {
   return d3.format(".1f")(x) + "%";
 }
 
+function getHouseholdMultiplier() {
+  const sel = document.getElementById("householdSelect");
+  return sel ? parseFloat(sel.value) : 1.0;
+}
+
 function categoryFromBurden(burden) {
   if (burden <= 0.30) return "Affordable";
   if (burden <= 0.40) return "Borderline";
@@ -157,9 +162,10 @@ function cleanData(zipData, stateData, countyFeatures) {
 }
 
 function withSalary(rows, salary) {
+  const multiplier = getHouseholdMultiplier();
   const monthlyIncome = salary / 12;
   return rows.map(d => {
-    const rent = d.avg_monthly_rent || d.monthly_rent;
+    const rent = (d.avg_monthly_rent || d.monthly_rent) * multiplier;
     const burden = rent / monthlyIncome;
     return {
       ...d,
@@ -594,10 +600,13 @@ function drawDreamLocation(salary) {
   const row = COUNTY_DATA.find(d => d.fips === id);
   if (!row) return;
 
-  const burden = row.avg_monthly_rent / (salary / 12);
+  const multiplier = getHouseholdMultiplier();
+  const householdLabel = document.getElementById("householdSelect").options[document.getElementById("householdSelect").selectedIndex].text;
+  const adjustedRequired = row.required_income * multiplier;
+  const burden = (row.avg_monthly_rent * multiplier) / (salary / 12);
   d3.select("#dreamTitle").text(countyLabel(row));
-  d3.select("#dreamRequiredIncome").text(formatDollar(row.required_income));
-  d3.select("#dreamDetails").text(`At ${formatDollar(salary)}, average rent would take ${formatPercent(burden * 100)} of income. The 30% rule says this county needs about ${formatDollar(row.required_income)} per year.`);
+  d3.select("#dreamRequiredIncome").text(formatDollar(adjustedRequired));
+  d3.select("#dreamDetails").text(`At ${formatDollar(salary)} for a ${householdLabel}, housing would take ${formatPercent(burden * 100)} of income. The 30% rule requires about ${formatDollar(adjustedRequired)}/yr.`);
 
   const { svg, W, H } = chartFrame("dreamChart", 210);
   const margin = { top: 25, right: 20, bottom: 35, left: 36 };
@@ -775,6 +784,9 @@ Promise.all([
   drawJobComparison();
 
   slider.addEventListener("input", function() { setSalary(+this.value, true, true); });
+
+  const householdSelect = document.getElementById("householdSelect");
+  if (householdSelect) householdSelect.addEventListener("change", () => updateAll(+slider.value));
 
   stateSelect.addEventListener("change", function() {
     selectedMapState = this.value;
