@@ -987,7 +987,7 @@ function enterExplorationMode() {
   if (ladderStatus) ladderStatus.textContent = "Use the salary buttons to compare income levels.";
   redrawAfterLayoutShift(120);
   redrawAfterLayoutShift(520);
-  setTimeout(() => document.getElementById("chapter4")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+  setTimeout(() => document.getElementById("chapter1")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
 }
 
 function setupStoryReveals() {
