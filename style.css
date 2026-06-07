@@ -821,7 +821,8 @@ main {
 }
 
 .cute-house:hover {
-  transform: translateY(-3px);
+  /* Keep the SVG transform attribute intact so houses do not jump on hover. */
+  filter: drop-shadow(0 9px 12px rgba(13, 28, 36, 0.18));
 }
 
 .cute-house rect,
@@ -2272,4 +2273,9 @@ body:not(.exploration-unlocked) #chapter4.visual-shown #jobComparisonChart {
   body:not(.exploration-unlocked) #chapter4.visual-shown {
     grid-template-columns: 1fr !important;
   }
+}
+
+/* In full exploration mode, hide guided Chapter 2 step text above the chart. */
+body.exploration-unlocked #incomeAnimationStatus {
+  display: none !important;
 }
