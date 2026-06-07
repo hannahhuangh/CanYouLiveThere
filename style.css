@@ -2358,3 +2358,30 @@ body.exploration-unlocked #incomeAnimationStatus {
     grid-template-columns: 1fr;
   }
 }
+
+.reset-story-btn {
+  position: fixed;
+  top: 1.1rem;
+  left: 1.1rem;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.4rem 1rem;
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 18px rgba(13, 28, 36, 0.08);
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+}
+
+.reset-story-btn:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}

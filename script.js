@@ -1298,3 +1298,12 @@ Promise.all([
   document.getElementById("loading").textContent =
     "Data load failed. Run this with Live Server and make sure ./datasets/rent_income_county_clean.csv and ./datasets/rent_income_state_clean.csv exist.";
 });
+
+// ── Reset / Restart button ─────────────────────────────────
+const resetStoryButton = document.getElementById("resetStoryButton");
+if (resetStoryButton) {
+  resetStoryButton.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+    location.reload();
+  });
+}
