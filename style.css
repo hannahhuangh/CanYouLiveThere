@@ -2279,3 +2279,82 @@ body:not(.exploration-unlocked) #chapter4.visual-shown #jobComparisonChart {
 body.exploration-unlocked #incomeAnimationStatus {
   display: none !important;
 }
+
+/* Offer-guess opening interaction */
+.offer-guess-panel {
+  border-left-color: var(--teal);
+  background: rgba(23, 179, 217, 0.08);
+}
+
+.guess-grid {
+  display: grid;
+  grid-template-columns: 1fr minmax(120px, 170px);
+  gap: 0.75rem 0.9rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.guess-grid label {
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.guess-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(255,255,255,0.74);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem 0.25rem 0.35rem;
+}
+
+.guess-input-wrap input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0.55rem 0.4rem;
+  font: inherit;
+  font-weight: 800;
+  color: var(--ink);
+  outline: none;
+}
+
+.guess-input-wrap span {
+  margin: 0;
+  display: inline;
+  font-size: 0.86rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+}
+
+.guess-submit {
+  margin-top: 1rem;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  background: var(--ink);
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+}
+
+.guess-submit:hover,
+.guess-submit:focus-visible {
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.guess-result.is-revealed {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .guess-grid {
+    grid-template-columns: 1fr;
+  }
+}

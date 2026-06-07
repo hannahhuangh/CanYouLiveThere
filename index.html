@@ -336,7 +336,7 @@
 
     <div class="hero-content">
       <h1>Can You Live<br><em>There?</em></h1>
-      <p class="hero-subtitle">A guided story about graduating, comparing salaries, and discovering where rent is actually affordable.</p>
+      <p class="hero-subtitle">A guided story about two job offers, two cities, and what rent changes about the meaning of a salary.</p>
       <div class="tag">
         <span>Zillow ZORI rent data</span>
         <span>IRS 2022 AGI by ZIP</span>
@@ -346,12 +346,11 @@
   </header>
 
   <nav class="story-progress" aria-label="Story progress">
-    <a href="#chapter1">1</a>
-    <a href="#chapter2">2</a>
-    <a href="#chapter3">3</a>
-    <a href="#chapter4">4</a>
-    <a href="#chapter5">5</a>
-    <a href="#chapter6">6</a>
+    <a href="#chapter4">1</a>
+    <a href="#chapter1">2</a>
+    <a href="#chapter2">3</a>
+    <a href="#chapter5">4</a>
+    <a href="#chapter6">5</a>
     <a href="#takeaways">Learn</a>
     <a href="#your-turn">Explore</a>
   </nav>
@@ -359,40 +358,37 @@
   <main>
     <section class="story-section intro-section" id="intro">
       <div class="story-copy">
-        <p class="eyebrow">The Graduate Story</p>
-        <h2>You just graduated. Where can life actually begin?</h2>
+        <p class="eyebrow">The Job Offer Story</p>
+        <h2>My friend Allan got two job offers. Which one should he choose?</h2>
         <p>
-          Imagine you are leaving college and comparing possible places to live after graduation. Before the map appears, answer two questions so the story can follow your situation.
+          Allan is graduating and choosing between two offers: <strong>$85,000 in San Diego County</strong> or <strong>$70,000 in Philadelphia County</strong>. The San Diego offer sounds better because the salary is higher, but rent can quietly change what that number means.
         </p>
-        <div class="story-question story-setup-panel" id="storySetupPanel">
-          <span>First, how much do you expect to make?</span>
-          <strong>The guided story will use this number as your starting point.</strong>
-          <div class="salary-choice-grid" role="group" aria-label="Choose a starting salary">
-            <button type="button" class="salary-choice" data-salary="45000">Under $50k</button>
-            <button type="button" class="salary-choice" data-salary="65000">$50k–$75k</button>
-            <button type="button" class="salary-choice active" data-salary="85000">$75k–$100k</button>
-            <button type="button" class="salary-choice" data-salary="110000">$100k+</button>
-          </div>
-          <p class="tiny-note" id="salaryChoiceNote">Selected story salary: $85,000</p>
-
-          <div class="intro-dream-control">
-            <label for="introDreamSelect">Second, what is your dream county?</label>
-            <select id="introDreamSelect">
-              <option>Loading counties...</option>
-            </select>
-            <p class="tiny-note" id="dreamChoiceNote">Default dream county: San Diego County, CA</p>
-          </div>
-        </div>
+        <p>
+          Before seeing the chart, make a guess: what percent of each offer would go toward average monthly rent?
+        </p>
+        
       </div>
 
       <div class="formula-card">
         <h3>The rule behind the story</h3>
-        <p>Housing is treated as affordable when rent is no more than 30% of monthly income.</p>
-        <p class="formula">required income = monthly rent × 12 ÷ 0.30</p>
-        <p class="tiny-note">This is a simplified lens, but it makes the tradeoff between income and place visible.</p>
+        <p>Housing is treated as affordable when rent is no more than 30% of monthly gross income.</p>
+        <p class="tiny-note">Income here is annual gross income, and rent uses average monthly rent from the dataset.</p>
+      
+        <div class="story-question offer-guess-panel" id="offerGuessPanel">
+          <span>Take a guess before the reveal</span>
+          <strong>Rent burden = monthly rent ÷ monthly gross income</strong>
+          <div class="guess-grid">
+            <label for="guessSanDiego">San Diego offer: $85k</label>
+            <div class="guess-input-wrap"><input id="guessSanDiego" type="number" min="0" max="100" step="1" placeholder="ex: 42"><span>%</span></div>
+            <label for="guessPhiladelphia">Philadelphia offer: $70k</label>
+            <div class="guess-input-wrap"><input id="guessPhiladelphia" type="number" min="0" max="100" step="1" placeholder="ex: 31"><span>%</span></div>
+          </div>
+          <button id="submitOfferGuess" class="guess-submit" type="button">Reveal the real numbers</button>
+          <p class="tiny-note guess-result" id="offerGuessResult">Your guesses will be compared with the data.</p>
+        </div>
       </div>
 
-      <p class="scroll-cue">Scroll to start the journey ↓</p>
+      <p class="scroll-cue">Scroll to test Allan’s offers ↓</p>
     </section>
 
     <section class="control-panel sticky-controls exploration-only" id="storyControls">
@@ -413,95 +409,12 @@
     <div class="loading" id="loading">Loading rent and income data...</div>
     <div class="tooltip" id="tooltip"></div>
 
-    <section id="charts" style="display:none;">
-      <section class="chapter chapter-map guided-chapter" id="chapter1" data-use-story-salary="true" data-story-step="1">
+    <section id="charts" style="display:none;">      <section class="chapter guided-chapter" id="chapter4" data-use-story-salary="true" data-story-step="1">
         <div class="chapter-text">
           <p class="eyebrow">Chapter 1</p>
-          <h2>The affordability illusion</h2>
-          <p class="guided-copy">You begin with your selected starting salary: <strong id="storySalaryInline">$85,000</strong>. It may sound comfortable, but the map tests that assumption using the 30% rent rule.</p><p class="exploration-copy">Use the salary slider and state selector to see how affordability changes across the U.S. Click a state to zoom into counties, then click a county to use it in the comparisons below.</p>
-          <p class="chapter-prompt" id="chapter1Prompt">Before looking closely, ask yourself: how many places should this salary unlock?</p>
-          <p class="use-note guided-note">Guided mode keeps the view simple: the story controls the salary and shows the national pattern first.</p>
-          <div class="stat-grid">
-            <div class="stat-card"><span id="affordableStateCount">—</span><small>affordable states</small></div>
-            <div class="stat-card"><span id="affordableCountyCount">—</span><small>affordable counties</small></div>
-            <div class="stat-card"><span id="medianRequiredIncome">—</span><small>median required income</small></div>
-          </div>
-        </div>
-
-        <div class="visual-card wide">
-          <div class="map-actions">
-            <span id="mapModeLabel">Viewing: all states</span>
-            <span class="hint exploration-copy">Click a state to zoom into counties. Click a county to compare it.</span><span class="hint guided-copy">National view for the guided story</span>
-          </div>
-          <svg id="mapChart" width="100%" height="430"></svg>
-          <div class="legend-row">
-            <span class="legend-dot green"></span><span>Affordable</span>
-            <span class="legend-dot yellow"></span><span>Borderline</span>
-            <span class="legend-dot orange"></span><span>Burdened</span>
-            <span class="legend-dot red"></span><span>Severely burdened</span>
-            <span class="legend-dot nodata"></span><span>No data</span>
-          </div>
-          <p class="insight" id="mapInsight">The map will update when data loads.</p>
-        </div>
-      </section>
-
-      <section class="chapter guided-chapter" id="chapter2" data-use-story-salary="true" data-story-step="2">
-        <div class="chapter-text">
-          <p class="eyebrow">Chapter 2</p>
-          <h2>A raise changes the map</h2>
-          <p class="guided-copy">Now imagine your income grows over time. Each raise changes the number of counties where rent stays below the affordability threshold.</p><p class="exploration-copy">Use this view to test different salary levels and watch the affordability ladder change. The bars show how many places become affordable as income increases.</p>
-          <p class="chapter-prompt guided-copy">Click through the income levels one step at a time to see how the map changes.</p><p class="chapter-prompt exploration-copy">Click a salary button to update the map and compare how affordability changes at each income level.</p>
-          <div class="salary-buttons exploration-only-inline">
-            <button class="salary-jump" data-salary="40000">$40k</button>
-            <button class="salary-jump" data-salary="60000">$60k</button>
-            <button class="salary-jump" data-salary="80000">$80k</button>
-            <button class="salary-jump" data-salary="100000">$100k</button>
-            <button class="salary-jump" data-salary="150000">$150k+</button>
-          </div>
-        </div>
-
-        <div class="visual-card">
-          <h3>Income ladder</h3>
-          <div id="incomeAnimationStatus" class="income-animation-status">Click “Show income ladder” first. Then use the buttons below to move through each salary level.</div>
-          <div id="storyLadderControls" class="story-ladder-controls guided-copy">
-            <button type="button" data-ladder="back">Back</button>
-            <button type="button" data-ladder="next">Next income level</button>
-            <button type="button" data-ladder="reset">Reset</button>
-          </div>
-          <svg id="ladderChart" width="100%" height="310"></svg>
-          <p class="insight" id="ladderInsight">This chart shows the share of counties affordable at different incomes.</p>
-        </div>
-      </section>
-
-      <section class="chapter guided-chapter" id="chapter3" data-use-story-salary="true" data-story-step="3">
-        <div class="chapter-text">
-          <p class="eyebrow">Chapter 3</p>
-          <h2>Same salary, different life</h2>
-          <p class="guided-copy">Compare your chosen county with Philadelphia using the same salary. The paycheck stays the same, but the rent burden may not.</p><p class="exploration-copy">Pick any two counties and compare them using the same salary. The bars show rent burden percentages, so you can see which place is easier to afford.</p>
-          <p class="chapter-prompt guided-copy">Same paycheck. Your dream county versus Philadelphia.</p><p class="chapter-prompt exploration-copy">Change Place A, Place B, and salary to test your own county comparison.</p>
-          <div class="control-row mini-controls exploration-only-inline">
-            <label for="compareA">Place A</label>
-            <select id="compareA"></select>
-          </div>
-          <div class="control-row mini-controls exploration-only-inline">
-            <label for="compareB">Place B</label>
-            <select id="compareB"></select>
-          </div>
-        </div>
-
-        <div class="visual-card">
-          <h3>County comparison</h3>
-          <div id="comparisonCards" class="comparison-cards"></div>
-          <svg id="comparisonChart" width="100%" height="260"></svg>
-        </div>
-      </section>
-
-      <section class="chapter guided-chapter" id="chapter4" data-use-career-salary="true" data-story-step="4">
-        <div class="chapter-text">
-          <p class="eyebrow">Chapter 4</p>
-          <h2>Two job offers, two cities</h2>
-          <p class="guided-copy">Now imagine you get two job offers: $85,000 in your dream county and $70,000 in Philadelphia.</p><p class="exploration-copy">Use this section to compare two job offers in two counties. Change each county and each salary to see whether the bigger paycheck actually gives you a lower rent burden.</p>
-          <p class="chapter-prompt guided-copy">The bigger offer does not automatically mean the easier life. Rent can change the result.</p><p class="chapter-prompt exploration-copy">Adjust both salaries and compare the bars. Lower rent burden means the offer is easier to live on.</p>
+          <h2>Allan’s two job offers</h2>
+          <p class="guided-copy">Allan’s first offer pays <strong>$85,000 in San Diego County</strong>. The second pays <strong>$70,000 in Philadelphia</strong>. At first, the higher number seems like the obvious choice.</p><p class="exploration-copy">Use this section to compare two job offers in two counties. Change each county and each salary to see whether the bigger paycheck actually gives you a lower rent burden.</p>
+          <p class="chapter-prompt guided-copy">The real question is not “which salary is higher?” It is “which salary leaves more room after rent?”</p><p class="chapter-prompt exploration-copy">Adjust both salaries and compare the bars. Lower rent burden means the offer is easier to live on.</p>
           <div class="control-row mini-controls exploration-only-inline">
             <label for="jobCountyA">Place A</label>
             <select id="jobCountyA"></select>
@@ -527,13 +440,72 @@
         </div>
       </section>
 
-      <section class="chapter guided-chapter" id="chapter5" data-use-story-salary="true" data-story-step="5">
+      <section class="chapter chapter-map guided-chapter" id="chapter1" data-use-story-salary="true" data-story-step="2">
         <div class="chapter-text">
-          <p class="eyebrow">Chapter 5</p>
+          <p class="eyebrow">Chapter 2</p>
+          <h2>What Allan’s salary does not show</h2>
+          <p class="guided-copy">Allan’s San Diego offer uses a salary of <strong id="storySalaryInline">$85,000</strong>. On paper that sounds strong, but the national map shows that a salary only becomes meaningful when it is matched with local rent.</p><p class="exploration-copy">Use the salary slider and state selector to see how affordability changes across the U.S. Click a state to zoom into counties, then click a county to use it in the comparisons below.</p>
+          <p class="chapter-prompt" id="chapter1Prompt">The map turns Allan’s offer into a bigger question: where does $85k actually work?</p>
+          <p class="use-note guided-note">Guided mode keeps the view simple: the story controls the salary and shows the national pattern first.</p>
+          <div class="stat-grid">
+            <div class="stat-card"><span id="affordableStateCount">—</span><small>affordable states</small></div>
+            <div class="stat-card"><span id="affordableCountyCount">—</span><small>affordable counties</small></div>
+            <div class="stat-card"><span id="medianRequiredIncome">—</span><small>median required income</small></div>
+          </div>
+        </div>
+
+        <div class="visual-card wide">
+          <div class="map-actions">
+            <span id="mapModeLabel">Viewing: all states</span>
+            <span class="hint exploration-copy">Click a state to zoom into counties. Click a county to compare it.</span><span class="hint guided-copy">National view for the guided story</span>
+          </div>
+          <svg id="mapChart" width="100%" height="430"></svg>
+          <div class="legend-row">
+            <span class="legend-dot green"></span><span>Affordable</span>
+            <span class="legend-dot yellow"></span><span>Borderline</span>
+            <span class="legend-dot orange"></span><span>Burdened</span>
+            <span class="legend-dot red"></span><span>Severely burdened</span>
+            <span class="legend-dot nodata"></span><span>No data</span>
+          </div>
+          <p class="insight" id="mapInsight">The map will update when data loads.</p>
+        </div>
+      </section>
+
+      <section class="chapter guided-chapter" id="chapter2" data-use-story-salary="true" data-story-step="3">
+        <div class="chapter-text">
+          <p class="eyebrow">Chapter 3</p>
+          <h2>How much income changes the answer</h2>
+          <p class="guided-copy">If Allan tried to negotiate, how much would the raise matter? The ladder shows that income helps, but it does not unlock every place evenly.</p><p class="exploration-copy">Use this view to test different salary levels and watch the affordability ladder change. The bars show how many places become affordable as income increases.</p>
+          <p class="chapter-prompt guided-copy">Click through the income levels to see how each raise changes Allan’s options.</p><p class="chapter-prompt exploration-copy">Click a salary button to update the map and compare how affordability changes at each income level.</p>
+          <div class="salary-buttons exploration-only-inline">
+            <button class="salary-jump" data-salary="40000">$40k</button>
+            <button class="salary-jump" data-salary="60000">$60k</button>
+            <button class="salary-jump" data-salary="80000">$80k</button>
+            <button class="salary-jump" data-salary="100000">$100k</button>
+            <button class="salary-jump" data-salary="150000">$150k+</button>
+          </div>
+        </div>
+
+        <div class="visual-card">
+          <h3>Income ladder</h3>
+          <div id="incomeAnimationStatus" class="income-animation-status">Click “Show income ladder” first. Then use the buttons below to move through each salary level.</div>
+          <div id="storyLadderControls" class="story-ladder-controls guided-copy">
+            <button type="button" data-ladder="back">Back</button>
+            <button type="button" data-ladder="next">Next income level</button>
+            <button type="button" data-ladder="reset">Reset</button>
+          </div>
+          <svg id="ladderChart" width="100%" height="310"></svg>
+          <p class="insight" id="ladderInsight">This chart shows the share of counties affordable at different incomes.</p>
+        </div>
+      </section>
+
+      <section class="chapter guided-chapter" id="chapter5" data-use-story-salary="true" data-story-step="4">
+        <div class="chapter-text">
+          <p class="eyebrow">Chapter 4</p>
           <h2>What would it take to live there?</h2>
-          <p class="guided-copy">Your dream county was selected at the beginning of the story. Now the project flips the question: not “Do I like this place?” but “What would it take to live there?”</p><p class="exploration-copy">Choose any county to see its average rent, the estimated income needed to keep rent under 30%, and whether your current salary is enough.</p>
-          <p class="chapter-prompt">The chart compares your selected salary with the income needed for your dream county.</p>
-          <p class="dream-readout guided-copy">Dream county selected: <strong id="dreamCountyInline">San Diego County, CA</strong></p>
+          <p class="guided-copy">Now flip Allan’s question. Instead of asking whether $85k is “good,” ask what income San Diego County would require for rent to stay under 30%.</p><p class="exploration-copy">Choose any county to see its average rent, the estimated income needed to keep rent under 30%, and whether your current salary is enough.</p>
+          <p class="chapter-prompt">The chart compares the salary with the income needed for the selected county.</p>
+          <p class="dream-readout guided-copy">Offer location selected: <strong id="dreamCountyInline">San Diego County, CA</strong></p>
           <div class="control-row mini-controls exploration-only-inline">
             <label for="dreamSelect">Dream county</label>
             <select id="dreamSelect"></select>
@@ -548,12 +520,12 @@
         </div>
       </section>
 
-      <section class="chapter chapter-wide guided-chapter" id="chapter6" data-use-story-salary="true" data-story-step="6">
+      <section class="chapter chapter-wide guided-chapter" id="chapter6" data-use-story-salary="true" data-story-step="5">
         <div class="chapter-text">
-          <p class="eyebrow">Chapter 6</p>
+          <p class="eyebrow">Chapter 5</p>
           <h2>Where would you live?</h2>
-          <p class="guided-copy">After seeing the tradeoffs, the final story question becomes personal: if affordability mattered most, where would you actually go?</p><p class="exploration-copy">Use the filters to build your own recommendation list. Change the state, affordability category, and sorting option to find places that match your salary.</p>
-          <p class="chapter-prompt guided-copy">The story shows affordable matches for your selected salary. Later, exploration mode lets you filter them yourself.</p><p class="chapter-prompt exploration-copy">Use the filters to turn the story into a recommendation list.</p>
+          <p class="guided-copy">The final question is not only whether Allan can survive in a city. It is what choices become possible when a salary and a rent market fit together.</p><p class="exploration-copy">Use the filters to build your own recommendation list. Change the state, affordability category, and sorting option to find places that match your salary.</p>
+          <p class="chapter-prompt guided-copy">The recommendations show places where Allan’s $85k offer would leave more breathing room.</p><p class="chapter-prompt exploration-copy">Use the filters to turn the story into a recommendation list.</p>
 
           <div class="pref-section exploration-only-inline">
             <p class="pref-label">Filter by state</p>
@@ -595,11 +567,11 @@
         </div>
       </section>
 
-      <section class="story-section takeaway-section" id="takeaways" data-story-step="7">
+      <section class="story-section takeaway-section" id="takeaways" data-story-step="6">
         <div class="story-copy">
           <p class="eyebrow">Chapter 7</p>
           <h2>What did we learn?</h2>
-          <p id="personalTakeawayIntro">This story used your chosen salary and your dream county to show how affordability depends on the relationship between income and geography.</p>
+          <p id="personalTakeawayIntro">Allan’s offers show why salary should not be judged alone. A job offer is really a package of income, rent, location, and tradeoffs.</p>
         </div>
         <div class="personal-summary-grid">
           <article class="personal-summary-card"><span>Your salary</span><strong id="summarySalary">—</strong></article>
@@ -609,36 +581,36 @@
         <div class="takeaway-grid">
           <article class="takeaway-card">
             <span>01</span>
-            <h3>Income matters</h3>
-            <p>As salary increases, more places become affordable, but the change is uneven across the country.</p>
+            <h3>A higher salary can hide a weaker deal</h3>
+            <p>The San Diego offer pays more, but the rent market can take away part of that advantage before Allan spends money on anything else.</p>
           </article>
           <article class="takeaway-card">
             <span>02</span>
-            <h3>Location matters</h3>
-            <p>The same income can feel comfortable in one county and impossible in another.</p>
+            <h3>Affordability is about leftover choice</h3>
+            <p>Rent burden measures more than housing cost. It hints at how much freedom remains for savings, transportation, food, emergencies, and quality of life.</p>
           </article>
           <article class="takeaway-card">
             <span>03</span>
-            <h3>Affordability is relative</h3>
-            <p>A “good salary” does not have one fixed meaning. It depends on the rent market around you.</p>
+            <h3>The “best” offer depends on values</h3>
+            <p>Allan might still choose San Diego for career, family, or lifestyle reasons, but the visualization makes the hidden cost of that choice visible.</p>
           </article>
         </div>
       </section>
 
-      <section class="story-section reflection-section" id="reflection" data-story-step="8">
+      <section class="story-section reflection-section" id="reflection" data-story-step="7">
         <div class="reflection-copy">
           <p class="eyebrow">Reflection</p>
-          <h2>So... can you live there?</h2>
-          <p>There is no universal answer. Housing affordability is not only a budgeting problem; it is also a geographic one. Two people can earn the same amount and face completely different options because rent is unevenly distributed across the country.</p>
-          <p>Throughout the story, the examples used fixed salaries to reveal a pattern. But your situation may be different.</p>
+          <h2>So... which offer is better?</h2>
+          <p>The deeper answer is that “better” is not the same as “higher paying.” Allan’s decision depends on how much of his paycheck is already claimed by rent, what he values in a city, and what he is willing to trade off to live there.</p>
+          <p>There is no single correct answer. San Diego might be worth the higher rent for someone who values the location, lifestyle, or career network there. Philadelphia might be the better choice for someone who wants more financial breathing room. Affordability is not just about finding the highest salary — it is about asking: How much is this city worth to me, and what am I giving up to live there?</p>
         </div>
       </section>
 
-      <section class="story-section final-explore-section" id="your-turn" data-unlock-exploration="true" data-story-step="9">
+      <section class="story-section final-explore-section" id="your-turn" data-unlock-exploration="true" data-story-step="8">
         <div class="story-copy">
           <p class="eyebrow">Now it is your turn</p>
           <h2>Explore your own story.</h2>
-          <p>The guided story used your chosen salary and dream county. Now switch into the full dashboard: adjust the salary, zoom into states, click counties, compare job offers, and filter recommendations yourself.</p>
+          <p>The guided story followed Allan’s two offers. Now switch into the full dashboard: adjust the salary, zoom into states, click counties, compare your own job offers, and filter recommendations yourself.</p>
           <button class="explore-button" id="enterExploreMode" type="button">Enter full exploration mode ↑</button>
         </div>
         <div class="explore-checklist">
@@ -653,7 +625,7 @@
   </main>
 
   <footer>
-    Values are estimates for exploratory visualization. Housing affordability uses the 30% rule.
+    Values are estimates for exploratory visualization. Housing affordability uses annual gross income, average monthly rent, and the 30% rule.
   </footer>
 
   <script src="script.js"></script>

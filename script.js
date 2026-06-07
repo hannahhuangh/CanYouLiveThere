@@ -501,6 +501,54 @@ function lowerPhillyOfferSalary() {
   return 70000;
 }
 
+function allanOfferRows() {
+  const sanDiego = COUNTY_DATA.find(d => d.state === "CA" && normalizeCountyName(d.county).includes("san diego"));
+  const philly = philadelphiaCounty();
+  if (!sanDiego || !philly) return null;
+  const enrich = (row, salary) => {
+    const burden = row.avg_monthly_rent / (salary / 12);
+    return {
+      row,
+      salary,
+      burdenPercent: burden * 100,
+      label: countyLabel(row)
+    };
+  };
+  return [enrich(sanDiego, dreamOfferSalary()), enrich(philly, lowerPhillyOfferSalary())];
+}
+
+function setupOfferGuess() {
+  const button = document.getElementById("submitOfferGuess");
+  const result = document.getElementById("offerGuessResult");
+  if (!button || !result || button.dataset.ready) return;
+  button.dataset.ready = "true";
+
+  button.addEventListener("click", () => {
+    const offers = allanOfferRows();
+    if (!offers) {
+      result.textContent = "The offer comparison data is still loading.";
+      return;
+    }
+
+    const sdGuess = +document.getElementById("guessSanDiego")?.value;
+    const phillyGuess = +document.getElementById("guessPhiladelphia")?.value;
+    const sd = offers[0];
+    const philly = offers[1];
+    const guessText = [
+      Number.isFinite(sdGuess) ? `Your San Diego guess: ${sdGuess.toFixed(0)}%.` : "No San Diego guess entered.",
+      Number.isFinite(phillyGuess) ? `Your Philadelphia guess: ${phillyGuess.toFixed(0)}%.` : "No Philadelphia guess entered."
+    ].join(" ");
+
+    result.classList.add("is-revealed");
+    result.innerHTML = `${guessText}<br><strong>Actual:</strong> ${sd.label} uses ${formatPercent(sd.burdenPercent)} of Allan’s $85k income for rent. ${philly.label} uses ${formatPercent(philly.burdenPercent)} of his $70k income.`;
+
+    const firstChapter = document.getElementById("chapter4");
+    firstChapter?.classList.add("visual-ready", "visual-shown");
+    drawJobComparison();
+    setTimeout(() => firstChapter?.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
+  });
+}
+
 function syncDreamControls(fips) {
   const row = COUNTY_DATA.find(d => d.fips === fips);
   if (!row) return;
@@ -571,6 +619,7 @@ function syncComparisonDropdowns() {
 }
 
 function drawComparison(salary) {
+  if (!document.getElementById("comparisonCards") || !document.getElementById("comparisonChart")) return;
   if (!isExplorationMode) {
     const pair = guidedComparisonPair();
     selectedCountyIds = pair.map(d => d.fips);
@@ -934,9 +983,11 @@ function enterExplorationMode() {
   const badge = document.getElementById("modeBadge");
   if (badge) badge.textContent = "Full exploration mode";
   setSalary(storySalary, true, true);
+  const ladderStatus = document.getElementById("incomeAnimationStatus");
+  if (ladderStatus) ladderStatus.textContent = "Use the salary buttons to compare income levels.";
   redrawAfterLayoutShift(120);
   redrawAfterLayoutShift(520);
-  setTimeout(() => document.getElementById("chapter1")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+  setTimeout(() => document.getElementById("chapter4")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
 }
 
 function setupStoryReveals() {
@@ -989,7 +1040,7 @@ function updateStoryChrome(activeSection) {
   if (badge) {
     if (isExplorationMode) badge.textContent = "Full exploration mode";
     else if (activeSection.dataset.unlockExploration) badge.textContent = "Ready for exploration";
-    else badge.textContent = `Guided story mode${step ? " · Step " + step : ""}`;
+    else badge.textContent = "Guided story mode";
   }
 
   document.body.classList.toggle("exploration-ready", !!activeSection.dataset.unlockExploration && !isExplorationMode);
@@ -1019,7 +1070,7 @@ function applyStoryLadderStep() {
   const status = document.getElementById("incomeAnimationStatus");
   if (status) {
     status.classList.remove("is-animating");
-    status.textContent = `Step ${storyLadderStepIndex + 1} of ${steps.length}: income is ${salary >= 150000 ? "$150,000+" : formatDollar(salary)}.`;
+    status.textContent = `Viewing income: ${salary >= 150000 ? "$150,000+" : formatDollar(salary)}.`;
   }
   const box = document.getElementById("storyLadderControls");
   if (box) {
@@ -1039,8 +1090,7 @@ function stepStoryLadder(direction) {
 const visualButtonLabels = {
   chapter1: "Show map",
   chapter2: "Show income ladder",
-  chapter3: "Show comparison",
-  chapter4: "Show salary comparison",
+  chapter4: "Show Allan’s offer comparison",
   chapter5: "Show dream county result",
   chapter6: "Show recommendations"
 };
@@ -1155,6 +1205,7 @@ Promise.all([
   setupStoryReveals();
   setupScrollStory();
   drawJobComparison();
+  setupOfferGuess();
 
   slider.addEventListener("input", function() { if (isExplorationMode) setSalary(+this.value, true, true); });
 
@@ -1178,11 +1229,13 @@ Promise.all([
   });
 
   ["compareA", "compareB"].forEach(id => {
-    document.getElementById(id).addEventListener("change", () => {
-      selectedCountyIds = [
-        document.getElementById("compareA").value,
-        document.getElementById("compareB").value
-      ];
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("change", () => {
+      const a = document.getElementById("compareA");
+      const b = document.getElementById("compareB");
+      if (!a || !b) return;
+      selectedCountyIds = [a.value, b.value];
       drawComparison(+slider.value);
     });
   });
