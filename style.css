@@ -2385,3 +2385,18 @@ body.exploration-unlocked #incomeAnimationStatus {
   color: white;
   border-color: var(--accent);
 }
+
+.team-members {
+  margin-top: 0.75rem;
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #4a3010;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+  margin-bottom: 1.25rem;
+}
